@@ -1,0 +1,14 @@
+{"agents": "",
+"mapnames": "Bind, Icebox, Breeze, Ascent",
+"players": "",
+"teams": "Paper Rex, OpTic Gaming",
+"side": "combined",
+"average_over_x": "yes",
+"order_by_y_target": "yes",
+"min_dataset_size": "5",
+"y_target": "k",
+"x_target": "mapname",
+"x2_target": "player",
+"max_dataset_width": "5",
+"query_level": "2"
+}
