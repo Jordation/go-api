@@ -17,3 +17,5 @@ type Result struct {
 	Map_id  int
 	Mapname string
 }
+
+type BetterResult map[string]interface{}

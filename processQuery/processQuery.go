@@ -23,8 +23,10 @@ import (
 	"gorm.io/gorm"
 )
 
+type DataGroup [2]string
 type StrToBool bool
 
+// converts any text in bool fields to true, empty str to false
 func (f StrToBool) UnmarshalJSON(b []byte) (err error) {
 	var s string
 	fmt.Print(s)
@@ -40,6 +42,7 @@ func (f StrToBool) UnmarshalJSON(b []byte) (err error) {
 	return nil
 }
 
+// helper bc i dont want to work on my frontend any more
 func filter_process(f *QueryFilters) (map[string][]string, string) {
 	filters := make(map[string][]string)
 	filters["agent"] = strings.Split(f.Agents, ", ")
@@ -58,35 +61,7 @@ func filter_process(f *QueryFilters) (map[string][]string, string) {
 	return filters, side
 }
 
-type QueryFilters struct {
-	Side     string `json:"side"`
-	Agents   string `json:"agents"`
-	Mapnames string `json:"mapnames"`
-	Players  string `json:"players"`
-	Teams    string `json:"teams"`
-}
-type GraphParams struct {
-	Query_level int    `json:"query_level,string"`
-	Y_target    string `json:"y_target"`
-	X_target    string `json:"x_target"`
-	X2_target   string `json:"x2_target"`
-}
-type DataParams struct {
-	Average_over_x    StrToBool `json:"average_over_x"`
-	Order_by_y_target StrToBool `json:"order_by_y_target"`
-	Min_dataset_size  int       `json:"min_dataset_size,string"`
-	Max_dataset_width int       `json:"max_dataset_width,string"`
-}
-type QueryForm struct {
-	Global_Filters *QueryFilters
-	Data_Params    *DataParams
-	Graph_Params   *GraphParams
-}
-
-type ProcessQueryMethods interface {
-	Make_SQL_Stmt() string
-}
-
+// makes sql statement from query filters
 func (f *QueryFilters) Make_SQL_Stmt() (string, []interface{}, error) {
 	var (
 		clauses []string
@@ -115,36 +90,62 @@ func (f *QueryFilters) Make_SQL_Stmt() (string, []interface{}, error) {
 	return stmt, args, nil
 }
 
-func ApplyGroupsToRows(r []my_db.Result, q GraphParams) error {
+type QueryFilters struct {
+	Side     string `json:"side"`
+	Agents   string `json:"agents"`
+	Mapnames string `json:"mapnames"`
+	Players  string `json:"players"`
+	Teams    string `json:"teams"`
+}
+type GraphParams struct {
+	Query_level int    `json:"query_level,string"`
+	Y_target    string `json:"y_target"`
+	X_target    string `json:"x_target"`
+	X2_target   string `json:"x2_target"`
+}
+type DataParams struct {
+	Average_over_x    StrToBool `json:"average_over_x"`
+	Order_by_y_target StrToBool `json:"order_by_y_target"`
+	Min_dataset_size  int       `json:"min_dataset_size,string"`
+	Max_dataset_width int       `json:"max_dataset_width,string"`
+}
+type QueryForm struct {
+	Global_Filters *QueryFilters
+	Data_Params    *DataParams
+	Graph_Params   *GraphParams
+}
 
+func (p *GraphParams) Make_Data_Groups([]my_db.BetterResult) (map[DataGroup][]my_db.BetterResult, error) {
+
+	return nil, nil
 }
 
 func ProcessQuery() error {
-	var rows []my_db.Result
+
 	db, err := gorm.Open(sqlite.Open("my_db/test.db"), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-
+	// read query from json
 	query, err := GetQuery()
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-
+	// get sql statment from query
 	stmt, args, err := query.Global_Filters.Make_SQL_Stmt()
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
+	var results []map[string]interface{}
 
-	db.Raw(stmt, args...).Scan(&rows)
+	// get rows from db
+	db.Raw(stmt, args...).Find(&results)
 
-	for _, row := range rows {
-		fmt.Print(row)
-	}
-
+	//groups, err := query.Graph_Params.Make_Data_Groups(rows)
+	println("Hello")
 	return nil
 }
 
