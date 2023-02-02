@@ -15,7 +15,6 @@ package processQuery
 import (
 	"encoding/json"
 	"fmt"
-	"go-api/initial/my_db"
 	"os"
 	"strings"
 
@@ -23,7 +22,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type DataGroup [2]string
 type StrToBool bool
 
 // converts any text in bool fields to true, empty str to false
@@ -115,9 +113,28 @@ type QueryForm struct {
 	Graph_Params   *GraphParams
 }
 
-func (p *GraphParams) Make_Data_Groups([]my_db.BetterResult) (map[DataGroup][]my_db.BetterResult, error) {
+func GroupContains(g [2]interface{}, gs [][2]interface{}) bool {
+	for _, group := range gs {
+		if group == g {
+			return true
+		}
+	}
+	return false
+}
 
-	return nil, nil
+func (p *GraphParams) MakeDataGroups(rows []map[string]interface{}) error {
+	var (
+		datagroups [][2]interface{}
+	)
+
+	for _, row := range rows {
+		curr_grp := [2]interface{}{row[p.X_target], row[p.X2_target]}
+		if !GroupContains(curr_grp, datagroups) {
+			datagroups = append(datagroups, curr_grp)
+		}
+	}
+
+	return nil
 }
 
 func ProcessQuery() error {
@@ -139,13 +156,14 @@ func ProcessQuery() error {
 		fmt.Println(err.Error())
 		return err
 	}
-	var results []map[string]interface{}
+	fmt.Println(stmt)
 
 	// get rows from db
-	db.Raw(stmt, args...).Find(&results)
+	var results []map[string]interface{}
+	db.Raw(stmt, args...).Scan(&results)
 
-	//groups, err := query.Graph_Params.Make_Data_Groups(rows)
-	println("Hello")
+	query.Graph_Params.MakeDataGroups(results)
+
 	return nil
 }
 
