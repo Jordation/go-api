@@ -1,26 +1,39 @@
 package main
 
 import (
-	"go-api/initial/processQuery"
+	"encoding/json"
+	"fmt"
+	a "go-api/initial/api"
+	"os"
 )
 
+func ReadQuery() (a.QueryForm, error) {
+	var query a.QueryForm
+	bytes, err := os.ReadFile("query.json")
+	if err != nil {
+		fmt.Println(err.Error())
+		return query, err
+	}
+
+	json.Unmarshal(bytes, &query.Global_Filters)
+	json.Unmarshal(bytes, &query.Data_Params)
+	json.Unmarshal(bytes, &query.Graph_Params)
+
+	return query, nil
+}
+
 func main() {
+	var (
+		filters a.ListPlayerStatsFilters
+	)
+	query, err := ReadQuery()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
-	// var result []db.Result
-	// var query processQuery.GraphQuery
+	filters.Columns = []string{query.Graph_Params.X_target, query.Graph_Params.X2_target}
+	filters.Unique = true
+	a.ListPlayerStats(filters, *query.Global_Filters)
 
-	// db, err := gorm.Open(sqlite.Open("./db/test.db"), &gorm.Config{})
-	// if err != nil {
-	// 	panic("failed to connect to db")
-	// }
-
-	// db.Raw("SELECT * FROM player_stats_combined;").Scan(&result)
-	// fmt.Println(len(result))
-	// err = processQuery.GroupRowsByTarget(query, result)
-
-	// if err != nil {
-	// 	return
-	// }
-
-	processQuery.ProcessQuery()
+	//processQuery.ProcessQuery()
 }
