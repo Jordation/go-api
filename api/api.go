@@ -36,10 +36,22 @@ func MakeGroups(r map[string][]PlayerStatsResult) map[string][]string {
 	return groups
 }
 
+func ListFromColumn() ([]interface{}, error) {
+
+	db, err := gorm.Open(sqlite.Open("./my_db/test.db"), &gorm.Config{})
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
-	map[string][]PlayerStatsResult,
-	map[string][]string,
+	map[string][]PlayerStatsResult, // results of rows
+	map[string][]string, // results of columns
 	error) {
+
 	// Connect to DB
 	db, err := gorm.Open(sqlite.Open("./my_db/test.db"), &gorm.Config{})
 	if err != nil {
@@ -73,7 +85,7 @@ func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
 		return results, nil, nil
 	}
 
-	// If Reqiest specifies columns, return a grouped list of columns
+	// If Reqiest specifies columns, return a grouped list of columns and rows
 	if f.Columns != nil {
 		for _, col := range f.Columns {
 			var result []PlayerStatsResult
@@ -86,7 +98,7 @@ func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
 			results[col] = result
 		}
 		groups = MakeGroups(results)
-		return nil, groups, nil
+		return results, groups, nil
 	}
 	return nil, nil, nil
 }
