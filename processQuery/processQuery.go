@@ -1,4 +1,4 @@
-package processQuery
+package GetGroupedBarData
 
 // 1. Get all rows matching global filters
 // 2. Group rows by first X target
@@ -13,170 +13,106 @@ package processQuery
 // 7. Shape data for chartjs
 
 import (
-	"encoding/json"
-	"fmt"
-	"go-api/initial/api"
-	"os"
-	"strings"
-
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	a "go-api/initial/api"
+	"log"
 )
 
-type StrToBool bool
+func CreateGroups(gc [][]string) [][2]string {
 
-// converts any text in bool fields to true, empty str to false
-func (f StrToBool) UnmarshalJSON(b []byte) (err error) {
-	var s string
-	fmt.Print(s)
-	if err := json.Unmarshal(b, &s); err != nil {
-		fmt.Print(err.Error())
-	}
+	var groups [][2]string
 
-	if s != "" {
-		f = true
-	} else {
-		f = false
-	}
-	return nil
-}
-
-// helper bc i dont want to work on my frontend any more
-func filter_process(f *QueryFilters) (map[string][]string, string) {
-	filters := make(map[string][]string)
-	filters["agent"] = strings.Split(f.Agents, ", ")
-	filters["mapname"] = strings.Split(f.Mapnames, ", ")
-	filters["team"] = strings.Split(f.Teams, ", ")
-	filters["player"] = strings.Split(f.Players, ", ")
-
-	for k, v := range filters {
-		if v[0] == "" {
-			filters[k] = nil
+	for _, val := range gc[0] {
+		for _, val2 := range gc[1] {
+			group := [2]string{val, val2}
+			groups = append(groups, group)
 		}
 	}
 
-	side := "player_stats_" + f.Side
-
-	return filters, side
+	return groups
 }
 
-// makes sql statement from query filters
-func (f *QueryFilters) Make_SQL_Stmt() (string, []interface{}, error) {
+func RowSatisfiesGroup(g [2]string, row a.PlayerStatsResult, targs []string) bool {
 	var (
-		clauses []string
-		args    []interface{}
-		stmt    string
+		satisfies [2]bool
 	)
 
-	// this should be done on the client, but for now it's here
-	filters, side := filter_process(f)
-
-	stmt = "SELECT * FROM " + side
-
-	for key, arg := range filters {
-		if len(arg) > 0 {
-			clauses = append(clauses, key+" IN ("+strings.Repeat("?, ", len(arg)-1)+"?)")
-			for _, value := range arg {
-				args = append(args, value)
+	for i, v := range targs {
+		switch v {
+		case "player":
+			if row.Player == g[i] {
+				satisfies[i] = true
+			} else {
+				return false
 			}
+		case "agent":
+			if row.Agent == g[i] {
+				satisfies[i] = true
+			} else {
+				return false
+			}
+		case "mapname":
+			if row.Mapname == g[i] {
+				satisfies[i] = true
+			} else {
+				return false
+			}
+		case "team":
+			if row.Team == g[i] {
+				satisfies[i] = true
+			} else {
+				return false
+			}
+		default:
+			return false
 		}
 	}
 
-	if len(clauses) != 0 {
-		stmt += " WHERE " + strings.Join(clauses, " AND ")
-	}
-
-	return stmt, args, nil
-}
-
-type QueryFilters struct {
-	Side     string `json:"side"`
-	Agents   string `json:"agents"`
-	Mapnames string `json:"mapnames"`
-	Players  string `json:"players"`
-	Teams    string `json:"teams"`
-}
-type GraphParams struct {
-	Query_level int    `json:"query_level,string"`
-	Y_target    string `json:"y_target"`
-	X_target    string `json:"x_target"`
-	X2_target   string `json:"x2_target"`
-}
-type DataParams struct {
-	Average_over_x    StrToBool `json:"average_over_x"`
-	Order_by_y_target StrToBool `json:"order_by_y_target"`
-	Min_dataset_size  int       `json:"min_dataset_size,string"`
-	Max_dataset_width int       `json:"max_dataset_width,string"`
-}
-type QueryForm struct {
-	Global_Filters *QueryFilters
-	Data_Params    *DataParams
-	Graph_Params   *GraphParams
-}
-
-func GroupContains(g [2]interface{}, gs [][2]interface{}) bool {
-	for _, group := range gs {
-		if group == g {
-			return true
-		}
+	if satisfies[0] == satisfies[1] {
+		return true
 	}
 	return false
 }
 
-func (p *GraphParams) MakeDataGroups(rows []map[string]interface{}) error {
-	var (
-		datagroups [][2]interface{}
-	)
+func FillGroupsWithRows(grps [][2]string, rows []a.PlayerStatsResult, targs []string) map[[2]string][]a.PlayerStatsResult {
+	filledGroups := make(map[[2]string][]a.PlayerStatsResult)
 
-	for _, row := range rows {
-		curr_grp := [2]interface{}{row[p.X_target], row[p.X2_target]}
-		if !GroupContains(curr_grp, datagroups) {
-			datagroups = append(datagroups, curr_grp)
+	for _, group := range grps {
+		for _, row := range rows {
+			if RowSatisfiesGroup(group, row, targs) {
+				filledGroups[group] = append(filledGroups[group], row)
+			}
 		}
 	}
-
-	return nil
+	return filledGroups
 }
 
-func ProcessQuery() error {
+func ProcessGroups() {
+	// assess size of datasets -> trim invalid
 
-	db, err := gorm.Open(sqlite.Open("my_db/test.db"), &gorm.Config{})
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
-	}
-	// read query from json
-	query, err := GetQuery()
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
-	}
-	// get sql statment from query
-	stmt, args, err := query.Global_Filters.MakeSQLStmt(false)
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
-	}
-	fmt.Println(stmt)
+	// assess max vals or average
 
-	// get rows from db
-	var results []map[string]interface{}
-	db.Raw(stmt, args...).Scan(&results)
-
-	return nil
+	// create chart js labels, formatting
 }
 
-func GetQuery() (api.QueryForm, error) {
-	var query api.QueryForm
-	bytes, err := os.ReadFile("query.json")
+func GetGroupedBarData(q a.QueryForm) error {
+	var (
+		filters a.ListPlayerStatsFilters
+	)
+
+	filters.Columns = []string{q.Graph_Params.X_target, q.Graph_Params.X2_target}
+	filters.Unique = true
+	rows, cols, err := a.ListPlayerStats(filters, *q.Global_Filters)
+
 	if err != nil {
-		fmt.Println(err.Error())
-		return query, err
+		log.Fatal(err)
+		return err
 	}
 
-	json.Unmarshal(bytes, &query.Global_Filters)
-	json.Unmarshal(bytes, &query.Data_Params)
-	json.Unmarshal(bytes, &query.Graph_Params)
+	_ = rows
 
-	return query, nil
+	groups := CreateGroups(cols)
+	filledGroups := FillGroupsWithRows(groups, rows, filters.Columns)
+	_ = groups
+	_ = filledGroups
+	return nil
 }

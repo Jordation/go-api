@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 
@@ -9,47 +8,37 @@ import (
 	"gorm.io/gorm"
 )
 
-func MakeGroups(r map[string][]PlayerStatsResult) map[string][]string {
+func GetWordsForGroups(r map[string][]PlayerStatsResult) [][]string {
 
-	groups := make(map[string][]string)
-
+	groups := make([][]string, len(r))
+	c := 0
 	for k, v := range r {
 		switch k {
 		case "player":
 			for _, v := range v {
-				groups[k] = append(groups[k], v.Player)
+				groups[c] = append(groups[c], v.Player)
 			}
 		case "agent":
 			for _, v := range v {
-				groups[k] = append(groups[k], v.Agent)
+				groups[c] = append(groups[c], v.Agent)
 			}
 		case "mapname":
 			for _, v := range v {
-				groups[k] = append(groups[k], v.Mapname)
+				groups[c] = append(groups[c], v.Mapname)
 			}
 		case "team":
 			for _, v := range v {
-				groups[k] = append(groups[k], v.Team)
+				groups[c] = append(groups[c], v.Team)
 			}
 		}
+		c++
 	}
 	return groups
 }
 
-func ListFromColumn() ([]interface{}, error) {
-
-	db, err := gorm.Open(sqlite.Open("./my_db/test.db"), &gorm.Config{})
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return nil, nil
-}
-
 func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
-	map[string][]PlayerStatsResult, // results of rows
-	map[string][]string, // results of columns
+	[]PlayerStatsResult, // results of rows
+	[][]string, // results of columns
 	error) {
 
 	// Connect to DB
@@ -60,8 +49,9 @@ func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
 	}
 
 	var (
-		results    = make(map[string][]PlayerStatsResult)
-		groups     map[string][]string
+		cols       = make(map[string][]PlayerStatsResult)
+		results    []PlayerStatsResult
+		groups     [][]string
 		inner_stmt string
 	)
 
@@ -72,32 +62,31 @@ func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
 			return nil, nil, err
 		}
 	} else {
-		fmt.Println("selecting all")
 		inner_stmt = "SELECT * FROM player_stats_combined"
 	}
-	// Base var to store results
 
 	// If no filters, return all rows
 	if reflect.DeepEqual(f, ListPlayerStatsFilters{}) {
 		var result []PlayerStatsResult
 		db.Raw(inner_stmt).Scan(&result)
-		results["All"] = result
 		return results, nil, nil
 	}
 
 	// If Reqiest specifies columns, return a grouped list of columns and rows
 	if f.Columns != nil {
 		for _, col := range f.Columns {
-			var result []PlayerStatsResult
-			stmt := "SELECT "
+			var col_result []PlayerStatsResult
+			col_stmt := "SELECT "
 			if f.Unique {
-				stmt += "DISTINCT "
+				col_stmt += "DISTINCT "
 			}
-			stmt += col + " FROM (" + inner_stmt + ")"
-			db.Raw(stmt).Scan(&result)
-			results[col] = result
+			col_stmt += col + " FROM (" + inner_stmt + ")"
+			db.Raw(col_stmt).Scan(&col_result)
+			cols[col] = col_result
 		}
-		groups = MakeGroups(results)
+		stmt := "SELECT * FROM (" + inner_stmt + ")"
+		db.Raw(stmt).Scan(&results)
+		groups = GetWordsForGroups(cols)
 		return results, groups, nil
 	}
 	return nil, nil, nil

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	a "go-api/initial/api"
+	pq "go-api/initial/processQuery"
 	"os"
 )
 
@@ -23,17 +24,10 @@ func ReadQuery() (a.QueryForm, error) {
 }
 
 func main() {
-	var (
-		filters a.ListPlayerStatsFilters
-	)
 	query, err := ReadQuery()
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-
-	filters.Columns = []string{query.Graph_Params.X_target, query.Graph_Params.X2_target}
-	filters.Unique = true
-	a.ListPlayerStats(filters, *query.Global_Filters)
-
-	//processQuery.ProcessQuery()
+	pq.GetGroupedBarData(query)
+	return
 }
