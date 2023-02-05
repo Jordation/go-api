@@ -36,7 +36,7 @@ func GetWordsForGroups(r map[string][]PlayerStatsResult) [][]string {
 	return groups
 }
 
-func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
+func ListPlayerStats(f ListPlayerStatsFilters, qf QueryForm) (
 	[]PlayerStatsResult, // results of rows
 	[][]string, // results of columns
 	error) {
@@ -55,8 +55,8 @@ func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
 		inner_stmt string
 	)
 
-	if gf != (GlobalQueryFilters{}) {
-		inner_stmt, _, err = gf.MakeSQLStmt(true)
+	if *qf.Global_Filters != (GlobalQueryFilters{}) {
+		inner_stmt, _, err = qf.Global_Filters.MakeSQLStmt(true)
 		if err != nil {
 			log.Fatal(err)
 			return nil, nil, err
@@ -67,6 +67,7 @@ func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
 
 	// If no filters, return all rows
 	if reflect.DeepEqual(f, ListPlayerStatsFilters{}) {
+		inner_stmt += " ORDER BY \"" + qf.Graph_Params.Y_target + "\" ASC"
 		var result []PlayerStatsResult
 		db.Raw(inner_stmt).Scan(&result)
 		return results, nil, nil
@@ -84,7 +85,7 @@ func ListPlayerStats(f ListPlayerStatsFilters, gf GlobalQueryFilters) (
 			db.Raw(col_stmt).Scan(&col_result)
 			cols[col] = col_result
 		}
-		stmt := "SELECT * FROM (" + inner_stmt + ")"
+		stmt := "SELECT * FROM (" + inner_stmt + ")" + " ORDER BY \"" + qf.Graph_Params.Y_target + "\" ASC"
 		db.Raw(stmt).Scan(&results)
 		groups = GetWordsForGroups(cols)
 		return results, groups, nil

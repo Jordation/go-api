@@ -9,7 +9,7 @@ import (
 type StrToBool bool
 
 // converts any text in bool fields to true, empty str to false
-func (f StrToBool) UnmarshalJSON(b []byte) (err error) {
+func (f *StrToBool) UnmarshalJSON(b []byte) error {
 	var s string
 	fmt.Print(s)
 	if err := json.Unmarshal(b, &s); err != nil {
@@ -17,9 +17,9 @@ func (f StrToBool) UnmarshalJSON(b []byte) (err error) {
 	}
 
 	if s != "" {
-		f = true
+		*f = true
 	} else {
-		f = false
+		*f = false
 	}
 	return nil
 }
@@ -99,15 +99,68 @@ type GraphParams struct {
 	X2_target   string `json:"x2_target"`
 }
 type DataParams struct {
-	Average_over_x    StrToBool `json:"average_over_x"`
-	Order_by_y_target StrToBool `json:"order_by_y_target"`
-	Min_dataset_size  int       `json:"min_dataset_size,string"`
-	Max_dataset_width int       `json:"max_dataset_width,string"`
+	Average_over_groups StrToBool `json:"average_rows_to_groups"`
+	Order_by_y_target   StrToBool `json:"order_by_y_target"`
+	Min_dataset_size    int       `json:"min_dataset_size,string"`
+	Max_dataset_width   int       `json:"max_dataset_width,string"`
 }
 type QueryForm struct {
 	Global_Filters *GlobalQueryFilters
 	Data_Params    *DataParams
 	Graph_Params   *GraphParams
+}
+
+func (r *PlayerStatsResult) JoinResult(r2 PlayerStatsResult) {
+	r.Player = r2.Player
+	r.Team = r2.Team
+	r.Mapname = r2.Mapname
+	r.Agent = r2.Agent
+	r.Acs += r2.Acs
+	r.K += r2.K
+	r.D += r2.D
+	r.A += r2.A
+	r.Kast += r2.Kast
+	r.Adr += r2.Adr
+	r.Hsp += r2.Hsp
+	r.Fb += r2.Fb
+	r.Fd += r2.Fd
+}
+
+func (r *PlayerStatsResult) AvgResult(c int) {
+	r.Acs /= c
+	r.K /= c
+	r.D /= c
+	r.A /= c
+	r.Kast /= c
+	r.Adr /= c
+	r.Hsp /= c
+	r.Fb /= c
+	r.Fd /= c
+}
+
+func (r *PlayerStatsResult) FindValue(k string) int {
+	switch k {
+	case "k":
+		return r.K
+	case "d":
+		return r.D
+	case "a":
+		return r.A
+	case "kast":
+		return r.Kast
+	case "acs":
+		return r.Acs
+	case "adr":
+		return r.Adr
+	case "hsp":
+		return r.Hsp
+	case "fd":
+		return r.Fd
+	case "fb":
+		return r.Fb
+	default:
+		return 0
+	}
 }
 
 type PlayerStatsResult struct {

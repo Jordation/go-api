@@ -66,11 +66,7 @@ func RowSatisfiesGroup(g [2]string, row a.PlayerStatsResult, targs []string) boo
 			return false
 		}
 	}
-
-	if satisfies[0] == satisfies[1] {
-		return true
-	}
-	return false
+	return satisfies[0] == satisfies[1]
 }
 
 func FillGroupsWithRows(grps [][2]string, rows []a.PlayerStatsResult, targs []string) map[[2]string][]a.PlayerStatsResult {
@@ -86,12 +82,54 @@ func FillGroupsWithRows(grps [][2]string, rows []a.PlayerStatsResult, targs []st
 	return filledGroups
 }
 
-func ProcessGroups() {
-	// assess size of datasets -> trim invalid
+func AverageResultsOverGroup(groups map[[2]string][]a.PlayerStatsResult) map[[2]string]a.PlayerStatsResult {
+	var newgroups = make(map[[2]string]a.PlayerStatsResult)
 
-	// assess max vals or average
+	for k, v := range groups {
+		c := 0
+		var avg_data a.PlayerStatsResult
+		for _, v2 := range v {
+			avg_data.JoinResult(v2)
+			c++
+		}
+		avg_data.AvgResult(c)
+
+		newgroups[k] = avg_data
+	}
+
+	return newgroups
+}
+
+func TakeHighestResult(groups map[[2]string][]a.PlayerStatsResult, q a.GraphParams) map[[2]string]a.PlayerStatsResult {
+	var newgroups = make(map[[2]string]a.PlayerStatsResult)
+	for k, v := range groups {
+		max := 0
+		for _, v2 := range v {
+			if v2.FindValue(q.Y_target) > max {
+				max = v2.FindValue(q.Y_target)
+				newgroups[k] = v2
+			}
+		}
+	}
+	return newgroups
+}
+
+func ProcessGroups(groups map[[2]string][]a.PlayerStatsResult, q a.QueryForm) map[[2]string]a.PlayerStatsResult {
+	var newgroups map[[2]string]a.PlayerStatsResult
+	for k, v := range groups {
+		if len(v) < q.Data_Params.Min_dataset_size {
+			delete(groups, k)
+		}
+	}
+
+	if q.Data_Params.Average_over_groups {
+		newgroups = AverageResultsOverGroup(groups)
+	} else {
+		newgroups = TakeHighestResult(groups, *q.Graph_Params)
+	}
 
 	// create chart js labels, formatting
+	return newgroups
 }
 
 func GetGroupedBarData(q a.QueryForm) error {
@@ -101,7 +139,7 @@ func GetGroupedBarData(q a.QueryForm) error {
 
 	filters.Columns = []string{q.Graph_Params.X_target, q.Graph_Params.X2_target}
 	filters.Unique = true
-	rows, cols, err := a.ListPlayerStats(filters, *q.Global_Filters)
+	rows, cols, err := a.ListPlayerStats(filters, q)
 
 	if err != nil {
 		log.Fatal(err)
@@ -112,7 +150,8 @@ func GetGroupedBarData(q a.QueryForm) error {
 
 	groups := CreateGroups(cols)
 	filledGroups := FillGroupsWithRows(groups, rows, filters.Columns)
-	_ = groups
-	_ = filledGroups
+	finalisedDatasets := ProcessGroups(filledGroups, q)
+
+	_ = finalisedDatasets
 	return nil
 }

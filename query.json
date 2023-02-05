@@ -3,7 +3,7 @@
 "players": "",
 "teams": "Paper Rex",
 "side": "combined",
-"average_over_x": "yes",
+"average_rows_to_groups": "",
 "order_by_y_target": "yes",
 "min_dataset_size": "5",
 "y_target": "k",
