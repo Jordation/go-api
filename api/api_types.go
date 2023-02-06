@@ -43,7 +43,7 @@ func filter_process(f *GlobalQueryFilters) (map[string][]string, string) {
 	return filters, side
 }
 
-// Single usecase get string from interface to satisfy type checker lol
+// Single usecase get string and add quotes
 func StringFromInterface(i interface{}) string {
 	newstr := `"` + i.(string) + `"`
 	return newstr
@@ -126,7 +126,7 @@ func (r *PlayerStatsResult) JoinResult(r2 PlayerStatsResult) {
 	r.Fd += r2.Fd
 }
 
-func (r *PlayerStatsResult) AvgResult(c int) {
+func (r *PlayerStatsResult) AvgResult(c float32) {
 	r.Acs /= c
 	r.K /= c
 	r.D /= c
@@ -138,7 +138,7 @@ func (r *PlayerStatsResult) AvgResult(c int) {
 	r.Fd /= c
 }
 
-func (r *PlayerStatsResult) FindValue(k string) int {
+func (r *PlayerStatsResult) FindValue(k string) float32 {
 	switch k {
 	case "k":
 		return r.K
@@ -168,15 +168,15 @@ type PlayerStatsResult struct {
 	Player  string
 	Agent   string
 	Team    string
-	Acs     int
-	K       int
-	D       int
-	A       int
-	Kast    int
-	Adr     int
-	Hsp     int
-	Fb      int
-	Fd      int
+	Acs     float32
+	K       float32
+	D       float32
+	A       float32
+	Kast    float32
+	Adr     float32
+	Hsp     float32
+	Fb      float32
+	Fd      float32
 	Map_id  int
 	Mapname string
 }
@@ -187,4 +187,18 @@ type ColumnResult struct {
 type ListPlayerStatsFilters struct {
 	Unique  bool
 	Columns []string
+}
+
+type GetRowsResultFilter struct {
+	Avg bool
+	Max bool
+	All bool
+}
+
+type GetRowsAsGroupsFilters struct {
+	Columns    [2]string
+	Filters    *GlobalQueryFilters
+	Groups     [][2]string
+	ResultType GetRowsResultFilter
+	Y_target   string
 }

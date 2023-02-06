@@ -36,17 +36,50 @@ func GetWordsForGroups(r map[string][]PlayerStatsResult) [][]string {
 	return groups
 }
 
-func ListPlayerStats(f ListPlayerStatsFilters, qf QueryForm) (
-	[]PlayerStatsResult, // results of rows
-	[][]string, // results of columns
-	error) {
-
+func GetRowsAsGroups(f GetRowsAsGroupsFilters) (map[[2]string]interface{}, error) {
+	var (
+		groupedResults = make(map[[2]string]interface{})
+		prefix         string
+	)
 	// Connect to DB
 	db, err := gorm.Open(sqlite.Open("./my_db/test.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
-		return nil, nil, err
 	}
+	// get innter statement for group query
+	inner_stmt, _, err := f.Filters.MakeSQLStmt(true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if f.ResultType.Avg {
+		prefix = `AVG(` + f.Y_target + `)`
+	}
+	if f.ResultType.Max {
+		prefix = f.Y_target
+	}
+	// for each group get matching rows
+	for _, grp_vals := range f.Groups {
+		var result map[string]interface{}
+		stmt := `SELECT ` + prefix + ` FROM 
+		(` + inner_stmt + `) WHERE `
+		stmt += f.Columns[0] + ` IN ("` + grp_vals[0] + `") 
+		AND ` + f.Columns[1] + ` IN ("` + grp_vals[1] + `") `
+		if f.ResultType.Max {
+			stmt += `ORDER BY ` + f.Y_target + ` DESC LIMIT 1`
+		}
+		db.Raw(stmt).Scan(&result)
+		groupedResults[grp_vals] = result[prefix]
+
+	}
+
+	return groupedResults, nil
+}
+
+func ListPlayerStats(f ListPlayerStatsFilters, qf QueryForm) (
+	[]PlayerStatsResult, // results of rows
+	[][]string, // results of columns
+	error) {
 
 	var (
 		cols       = make(map[string][]PlayerStatsResult)
@@ -55,6 +88,13 @@ func ListPlayerStats(f ListPlayerStatsFilters, qf QueryForm) (
 		inner_stmt string
 	)
 
+	// Connect to DB
+	db, err := gorm.Open(sqlite.Open("./my_db/test.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatal(err)
+		return nil, nil, err
+	}
+	// if no filters at all return all rows
 	if *qf.Global_Filters != (GlobalQueryFilters{}) {
 		inner_stmt, _, err = qf.Global_Filters.MakeSQLStmt(true)
 		if err != nil {
@@ -73,7 +113,7 @@ func ListPlayerStats(f ListPlayerStatsFilters, qf QueryForm) (
 		return results, nil, nil
 	}
 
-	// If Reqiest specifies columns, return a grouped list of columns and rows
+	// If request specifies columns, return a grouped list of columns and rows
 	if f.Columns != nil {
 		for _, col := range f.Columns {
 			var col_result []PlayerStatsResult
@@ -85,10 +125,13 @@ func ListPlayerStats(f ListPlayerStatsFilters, qf QueryForm) (
 			db.Raw(col_stmt).Scan(&col_result)
 			cols[col] = col_result
 		}
-		stmt := "SELECT * FROM (" + inner_stmt + ")" + " ORDER BY \"" + qf.Graph_Params.Y_target + "\" ASC"
+		stmt := `SELECT * FROM ( ` + inner_stmt + `) 
+		ORDER BY "` + qf.Graph_Params.Y_target + `" ASC`
+
 		db.Raw(stmt).Scan(&results)
 		groups = GetWordsForGroups(cols)
 		return results, groups, nil
 	}
+
 	return nil, nil, nil
 }
