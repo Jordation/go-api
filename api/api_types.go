@@ -45,8 +45,17 @@ func filter_process(f *GlobalQueryFilters) (map[string][]string, string) {
 
 // Single usecase get string and add quotes
 func StringFromInterface(i interface{}) string {
-	newstr := `"` + i.(string) + `"`
-	return newstr
+	return `"` + i.(string) + `"`
+}
+
+// Single usecase get float64
+func Float64FromInterface(i interface{}) float64 {
+	return i.(float64)
+}
+
+// Single usecase get int64
+func Int64FromInterface(i interface{}) int64 {
+	return i.(int64)
 }
 
 // makes sql statement from query filters
@@ -196,9 +205,10 @@ type GetRowsResultFilter struct {
 }
 
 type GetRowsAsGroupsFilters struct {
-	Columns    [2]string
-	Filters    *GlobalQueryFilters
-	Groups     [][2]string
-	ResultType GetRowsResultFilter
-	Y_target   string
+	Columns     [2]string
+	Filters     *GlobalQueryFilters
+	Groups      [][2]string
+	ResultType  GetRowsResultFilter
+	Y_target    string
+	Min_ds_size int
 }

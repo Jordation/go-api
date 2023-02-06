@@ -1,14 +1,5 @@
 package GetGroupedBarData
 
-// 1. Get all rows matching global filters
-// 2. Group rows by first X target
-// 3. Refine initial groups by x split target
-// 4. Function to handle data processes
-//     4.1. Average Values over group
-//     4.2. Highest single result in group
-// 5. Sort rows and adjust size
-//     5.1. Max dataset width trim
-//     5.2.
 // 6. Generate Labels
 // 7. Shape data for chartjs
 
@@ -48,8 +39,9 @@ func GetGroupedBarData(q a.QueryForm) error {
 	filters2.Columns = [2]string{q.Graph_Params.X_target, q.Graph_Params.X2_target}
 	filters2.Filters = q.Global_Filters
 	filters2.Groups = groups
-	filters2.ResultType.Max = true
+	filters2.ResultType.Avg = true
 	filters2.Y_target = q.Graph_Params.Y_target
+	filters2.Min_ds_size = q.Data_Params.Min_dataset_size
 
 	datasets, err := a.GetRowsAsGroups(filters2)
 	if err != nil {

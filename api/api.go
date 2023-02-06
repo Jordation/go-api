@@ -3,6 +3,7 @@ package api
 import (
 	"log"
 	"reflect"
+	"strconv"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -66,11 +67,20 @@ func GetRowsAsGroups(f GetRowsAsGroupsFilters) (map[[2]string]interface{}, error
 		stmt += f.Columns[0] + ` IN ("` + grp_vals[0] + `") 
 		AND ` + f.Columns[1] + ` IN ("` + grp_vals[1] + `") `
 		if f.ResultType.Max {
-			stmt += `ORDER BY ` + f.Y_target + ` DESC LIMIT 1`
+			stmt += `GROUP BY ` + f.Y_target +
+				` HAVING COUNT(*) >= ` + strconv.Itoa(f.Min_ds_size) +
+				` ORDER BY ` + f.Y_target + ` DESC LIMIT 1`
+		} else {
+			stmt += `HAVING COUNT(*) >= ` + strconv.Itoa(f.Min_ds_size)
 		}
 		db.Raw(stmt).Scan(&result)
-		groupedResults[grp_vals] = result[prefix]
-
+		if result[prefix] != nil {
+			if f.ResultType.Avg {
+				groupedResults[grp_vals] = result[prefix]
+			} else {
+				groupedResults[grp_vals] = result[prefix].(int64)
+			}
+		}
 	}
 
 	return groupedResults, nil
