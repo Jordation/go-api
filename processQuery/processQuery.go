@@ -44,7 +44,7 @@ func GetGroupedBarData(q a.QueryForm) error {
 
 	filters2.Filters = q.Global_Filters                   // redundant but in here for ease of access, creates inner stmt
 	filters2.Groups = groups                              // the sets of groups matching initial filters
-	filters2.ResultType.Avg = true                        // avg or max (have to change to resulttype.Max if u want to check)
+	filters2.ResultType.Avg = true                        // avg or max (have to change to resulttype.Max if u want to check (might use a const enum)
 	filters2.Y_target = q.Graph_Params.Y_target           // self exp.
 	filters2.Min_ds_size = q.Data_Params.Min_dataset_size // self exp.
 
