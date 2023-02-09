@@ -53,9 +53,11 @@ func GetRowsAsGroups(f GetRowsAsGroupsFilters) (map[[2]string]interface{}, error
 		log.Fatal(err)
 	}
 
+	// using avg function in raw db call seems to be what causes the nested interfaces on float vals
 	if f.ResultType.Avg {
 		prefix = `AVG(` + f.Y_target + `)`
 	}
+	// (bc it doesnt happen with this value)
 	if f.ResultType.Max {
 		prefix = f.Y_target
 	}
@@ -66,14 +68,19 @@ func GetRowsAsGroups(f GetRowsAsGroupsFilters) (map[[2]string]interface{}, error
 		(` + inner_stmt + `) WHERE `
 		stmt += f.Columns[0] + ` IN ("` + grp_vals[0] + `") 
 		AND ` + f.Columns[1] + ` IN ("` + grp_vals[1] + `") `
+
+		// result nil if row count < min_ds_size  if resulttype.max then just return 1 row
 		if f.ResultType.Max {
 			stmt += `GROUP BY ` + f.Y_target +
 				` HAVING COUNT(*) >= ` + strconv.Itoa(f.Min_ds_size) +
 				` ORDER BY ` + f.Y_target + ` DESC LIMIT 1`
 		} else {
+			// avg is already prefixed so just check for min_ds_size
 			stmt += `HAVING COUNT(*) >= ` + strconv.Itoa(f.Min_ds_size)
 		}
+
 		db.Raw(stmt).Scan(&result)
+		// if result is found add to grouped results
 		if result[prefix] != nil {
 			if f.ResultType.Avg {
 				groupedResults[grp_vals] = result[prefix]

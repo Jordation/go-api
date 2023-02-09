@@ -36,12 +36,17 @@ func GetGroupedBarData(q a.QueryForm) error {
 		return err
 	}
 	groups := CreateGroups(cols)
-	filters2.Columns = [2]string{q.Graph_Params.X_target, q.Graph_Params.X2_target}
-	filters2.Filters = q.Global_Filters
-	filters2.Groups = groups
-	filters2.ResultType.Avg = true
-	filters2.Y_target = q.Graph_Params.Y_target
-	filters2.Min_ds_size = q.Data_Params.Min_dataset_size
+
+	// config for filters just done here for ease
+	filters2.Columns = [2]string{ // the columns to target
+		q.Graph_Params.X_target,
+		q.Graph_Params.X2_target}
+
+	filters2.Filters = q.Global_Filters                   // redundant but in here for ease of access, creates inner stmt
+	filters2.Groups = groups                              // the sets of groups matching initial filters
+	filters2.ResultType.Avg = true                        // avg or max (have to change to resulttype.Max if u want to check)
+	filters2.Y_target = q.Graph_Params.Y_target           // self exp.
+	filters2.Min_ds_size = q.Data_Params.Min_dataset_size // self exp.
 
 	datasets, err := a.GetRowsAsGroups(filters2)
 	if err != nil {

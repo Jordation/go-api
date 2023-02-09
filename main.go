@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	a "go-api/initial/api"
+
+	//"go-api/initial/scraper"
+
 	pq "go-api/initial/processQuery"
 	"os"
 )
@@ -30,4 +33,6 @@ func main() {
 	}
 	pq.GetGroupedBarData(query)
 	return
+	//url := `https://www.vlr.gg/168037/95x-esports-vs-built-for-greatness-challengers-league-oceania-split-1-w3`
+	//scraper.Scrape(url)
 }
