@@ -28,11 +28,13 @@ func labelAllData(data []string, players []string) []map[string]string {
 
 		labeledData = append(labeledData, getMappedData(dg, players[i/12]))
 	}
-
 	return labeledData
 }
 
-func ProcessRawData(RawDatasets ...[]string) {
-	//
+//ProcessRawData process the raw scraped data
+func ProcessRawData(rawData RawMatchData) {
+
+	// validate shape of data
+
 	fmt.Println("Hello")
 }

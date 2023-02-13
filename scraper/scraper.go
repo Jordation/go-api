@@ -11,11 +11,33 @@ package scraper
 
 import (
 	"fmt"
-	"log"
 	s "strings"
 
 	"github.com/gocolly/colly"
 )
+
+type statRow struct {
+	statsT  []string
+	statsCT []string
+	player  string
+	agent   string
+}
+type mapData struct {
+	data    []string
+	mapname string
+	stats   []statRow
+}
+type matchData struct {
+	data []string
+}
+
+// RawMatchData struct for fields to be scraped into
+type RawMatchData struct {
+	MapNames  []string
+	MapCount  int
+	MapData   []mapData
+	matchInfo []string
+}
 
 // instantiate collector
 var c = colly.NewCollector(
@@ -23,98 +45,84 @@ var c = colly.NewCollector(
 	//colly.Debugger(&debug.LogDebugger{}),
 )
 
-func stripStr(str string) string {
+// new line killer
+func strip(str string) string {
 	return s.ReplaceAll(s.ReplaceAll(str, "\t", ""), "\n", "")
 }
 
+// Scrape - get stats for match of provided url
 func Scrape(url string) {
+	var rd RawMatchData
+
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting", r.URL)
 	})
 
-	// vars
-	var (
-		cntT, cntCT int
-
-		statsT, statsCT,
-		agentsPlayed, playerNames, mapNames,
-		headerData []string
-	)
+	//get map names
+	c.OnHTML("div.map>div>span", func(e *colly.HTMLElement) {
+		rd.MapNames = append(rd.MapNames, strip(s.Split(e.Text, "PICK")[0]))
+	})
 
 	//get header data
-	c.OnHTML("div.wf-title-med", func(e *colly.HTMLElement) {
-		headerData = append(headerData, stripStr(e.Text))
-	})
-	c.OnHTML("div.js-spoiler(2)", func(e *colly.HTMLElement) {
-		headerData = append(headerData, stripStr(e.Text))
-	})
-	c.OnHTML("a.match-header-event>div", func(e *colly.HTMLElement) {
-		e.ForEach("div", func(_ int, e2 *colly.HTMLElement) {
-			headerData = append(headerData, stripStr(e2.Text))
+	c.OnHTML("div.wf-card.match-header", func(e *colly.HTMLElement) {
+		e.ForEach("div.match-header-super>div>a>div>div", func(_ int, e2 *colly.HTMLElement) {
+			rd.matchInfo = append(rd.matchInfo, strip(e2.Text))
+		})
+		e.ForEach("div.match-header-super>div>div>div.moment-tz-convert", func(_ int, e2 *colly.HTMLElement) {
+			rd.matchInfo = append(rd.matchInfo, strip(e2.Text))
+		})
+		e.ForEach("div.match-header-vs>a>div>div.wf-title-med", func(_ int, e2 *colly.HTMLElement) {
+			rd.matchInfo = append(rd.matchInfo, strip(e2.Text))
 		})
 	})
-	c.OnHTML("div.match-header-date", func(e *colly.HTMLElement) {
-		headerData = append(headerData, stripStr(e.Text))
-	})
-	c.OnHTML("div.js-spoiler ", func(e *colly.HTMLElement) {
-		headerData = append(headerData, stripStr(e.Text))
-	})
 
-	// get t stats
-	c.OnHTML("span.mod-t.side", func(e *colly.HTMLElement) {
-		if cntT < 122 || cntT > 241 { // combined stat panel indicies, dont need
-			statsT = append(statsT, stripStr(e.Text))
+	// get stats
+
+	c.OnHTML("div.vm-stats-game", func(e *colly.HTMLElement) {
+		id := e.Attr("data-game-id")
+		if id != "all" {
+			// group scores, mapnames, teamnames
+			var mapdata mapData
+			e.ForEach("div.vm-stats-game-header>div.team>div>div.team-name", func(_ int, e2 *colly.HTMLElement) {
+				mapdata.data = append(mapdata.data, strip(e2.Text))
+			})
+			e.ForEach("div.vm-stats-game-header>div.team>div>span.mod-ct", func(_ int, e2 *colly.HTMLElement) {
+				mapdata.data = append(mapdata.data, strip(e2.Text))
+			})
+			e.ForEach("div.vm-stats-game-header>div.team>div>span.mod-t", func(_ int, e2 *colly.HTMLElement) {
+				mapdata.data = append(mapdata.data, strip(e2.Text))
+			})
+			mapdata.mapname = rd.MapNames[rd.MapCount]
+
+			// group rows of player stats
+			e.ForEach("div>div>table>tbody>tr", func(_ int, e2 *colly.HTMLElement) {
+				var stats statRow
+				e2.ForEach("td>span>span.mod-ct", func(_ int, e3 *colly.HTMLElement) {
+					stats.statsCT = append(stats.statsCT, strip(e3.Text))
+				})
+				e2.ForEach("td>span>span.mod-t", func(_ int, e3 *colly.HTMLElement) {
+					stats.statsT = append(stats.statsT, strip(e3.Text))
+				})
+				e2.ForEach("td>div>a>div.text-of", func(_ int, e3 *colly.HTMLElement) {
+					stats.player = strip(e3.Text)
+				})
+				e2.ForEach("td>div>span>img", func(_ int, e3 *colly.HTMLElement) {
+					stats.agent = e3.Attr("title")
+				})
+				mapdata.stats = append(mapdata.stats, stats)
+			})
+			rd.MapData = append(rd.MapData, mapdata)
+			rd.MapCount++
 		}
-		cntT++
 	})
 
-	// get ct stats
-	c.OnHTML("span.mod-ct.side", func(e *colly.HTMLElement) {
-		if cntCT < 122 || cntCT > 241 { // combined stat panel indicies, dont need
-			statsCT = append(statsCT, stripStr(e.Text))
-		}
-		cntCT++
-	})
-
-	// get agents played
-	c.OnHTML("span.mod-agent", func(e *colly.HTMLElement) {
-		agentsPlayed = append(agentsPlayed, e.ChildAttr("img", "title"))
-	})
-
-	// get player names
-	c.OnHTML("td.mod-player", func(e *colly.HTMLElement) {
-		f := s.Split(stripStr(e.Text), " ")
-		name := s.Join((f[:len(f)-1]), " ")
-		playerNames = append(playerNames, name)
-	})
-
-	//get map names
-	c.OnHTML("div.vm-stats-gamesnav-item", func(e *colly.HTMLElement) {
-		mapNames = append(mapNames, stripStr(e.Text))
-	})
 	c.Visit(url)
 	// SCRAPED
-
-	// validate shape of data
-	if len(playerNames)%10 != 0 {
-		log.Fatal("Malformed Data - Subs used between maps")
-	}
-	if len(statsT) != len(statsCT) {
-		log.Fatal("Malformed HTML - Stats T and CT length do not match")
-	}
-	if (len(statsT)%120 != 0) || (len(statsCT)%120 != 0) {
-		log.Fatal("Malformed HTML - Expected data points not found")
-	}
-
-	players := playerNames[:10]
-	// instead should be labelling statsT[:120], statsCT[:120], theory works just need to form in the map info parts
-
-	//final_data := labelAllData(statsT[:120], players)
 
 	// fix validation so it works on BO1 games
 	// test old stats pages before rating existed
 
-	ProcessRawData(statsT, statsCT, players, headerData, mapNames)
+	ProcessRawData(rd)
 
 	fmt.Println("hello")
 }
