@@ -16,27 +16,42 @@ import (
 	"github.com/gocolly/colly"
 )
 
-type statRow struct {
-	statsT  []string
-	statsCT []string
+type stats []string
+type playerData struct {
+	statsT  mappedPlayerData
+	statsCT mappedPlayerData
 	player  string
 	agent   string
 }
-type mapData struct {
+type mappedPlayerData map[string]string
+
+type gameData struct {
 	data    []string
 	mapname string
-	stats   []statRow
-}
-type matchData struct {
-	data []string
+	players []playerData
 }
 
-// RawMatchData struct for fields to be scraped into
-type RawMatchData struct {
-	MapNames  []string
-	MapCount  int
-	MapData   []mapData
+// matchData struct for fields to be scraped into
+type matchData struct {
+	mapCount  int
+	mapNames  []string
 	matchInfo []string
+	gameData  []gameData
+}
+
+var statCategories = []string{"Rating", "ACS", "Kills", "Deaths", "Assists",
+	"", "KAST", "ADR", "HSP", "FK", "FD", ""}
+
+func (s stats) MapData() mappedPlayerData {
+	ld := make(map[string]string)
+	for i, v := range statCategories {
+		switch v {
+		case "":
+		default:
+			ld[v] = s[i]
+		}
+	}
+	return ld
 }
 
 // instantiate collector
@@ -51,8 +66,8 @@ func strip(str string) string {
 }
 
 // Scrape - get stats for match of provided url
-func Scrape(url string) {
-	var rd RawMatchData
+func Scrape(url string) matchData {
+	var rd matchData
 
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("Visiting", r.URL)
@@ -60,7 +75,7 @@ func Scrape(url string) {
 
 	//get map names
 	c.OnHTML("div.map>div>span", func(e *colly.HTMLElement) {
-		rd.MapNames = append(rd.MapNames, strip(s.Split(e.Text, "PICK")[0]))
+		rd.mapNames = append(rd.mapNames, strip(s.Split(e.Text, "PICK")[0]))
 	})
 
 	//get header data
@@ -77,12 +92,11 @@ func Scrape(url string) {
 	})
 
 	// get stats
-
 	c.OnHTML("div.vm-stats-game", func(e *colly.HTMLElement) {
 		id := e.Attr("data-game-id")
 		if id != "all" {
-			// group scores, mapnames, teamnames
-			var mapdata mapData
+			// group scores, mapNames, teamnames
+			var mapdata gameData
 			e.ForEach("div.vm-stats-game-header>div.team>div>div.team-name", func(_ int, e2 *colly.HTMLElement) {
 				mapdata.data = append(mapdata.data, strip(e2.Text))
 			})
@@ -92,37 +106,35 @@ func Scrape(url string) {
 			e.ForEach("div.vm-stats-game-header>div.team>div>span.mod-t", func(_ int, e2 *colly.HTMLElement) {
 				mapdata.data = append(mapdata.data, strip(e2.Text))
 			})
-			mapdata.mapname = rd.MapNames[rd.MapCount]
+			mapdata.mapname = rd.mapNames[rd.mapCount]
 
 			// group rows of player stats
 			e.ForEach("div>div>table>tbody>tr", func(_ int, e2 *colly.HTMLElement) {
-				var stats statRow
+				var d playerData
+				var statT stats
+				var statCT stats
 				e2.ForEach("td>span>span.mod-ct", func(_ int, e3 *colly.HTMLElement) {
-					stats.statsCT = append(stats.statsCT, strip(e3.Text))
+					statCT = append(statCT, strip(e3.Text))
 				})
 				e2.ForEach("td>span>span.mod-t", func(_ int, e3 *colly.HTMLElement) {
-					stats.statsT = append(stats.statsT, strip(e3.Text))
+					statT = append(statT, strip(e3.Text))
 				})
 				e2.ForEach("td>div>a>div.text-of", func(_ int, e3 *colly.HTMLElement) {
-					stats.player = strip(e3.Text)
+					d.player = strip(e3.Text)
 				})
 				e2.ForEach("td>div>span>img", func(_ int, e3 *colly.HTMLElement) {
-					stats.agent = e3.Attr("title")
+					d.agent = e3.Attr("title")
 				})
-				mapdata.stats = append(mapdata.stats, stats)
+				d.statsCT = statCT.MapData()
+				d.statsT = statT.MapData()
+				mapdata.players = append(mapdata.players, d)
 			})
-			rd.MapData = append(rd.MapData, mapdata)
-			rd.MapCount++
+			rd.gameData = append(rd.gameData, mapdata)
+			rd.mapCount++
 		}
 	})
 
 	c.Visit(url)
-	// SCRAPED
 
-	// fix validation so it works on BO1 games
-	// test old stats pages before rating existed
-
-	ProcessRawData(rd)
-
-	fmt.Println("hello")
+	return rd
 }
