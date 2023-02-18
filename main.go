@@ -37,7 +37,7 @@ func main() {
 	//url := `https://www.vlr.gg/164480/diamant-esports-vs-enterprise-esports-challengers-league-east-surge-split-1-w5`
 	url2 := `https://www.vlr.gg/168037/95x-esports-vs-built-for-greatness-challengers-league-oceania-split-1-w3/?game=113776&tab=overview`
 	data := scraper.Scrape(url2)
-	ORMdata := scraper.ProcessRawData(data)
-	_ = ORMdata
+	ORMdata := scraper.MakeORMstruct(data)
 	db.MigrateDB()
+	db.InsertData(ORMdata)
 }

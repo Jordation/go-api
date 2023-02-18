@@ -60,9 +60,9 @@ var c = colly.NewCollector(
 	//colly.Debugger(&debug.LogDebugger{}),
 )
 
-// new line killer
+// kills formatting
 func strip(str string) string {
-	return s.ReplaceAll(s.ReplaceAll(str, "\t", ""), "\n", "")
+	return s.ReplaceAll(s.ReplaceAll(s.ReplaceAll(str, "\t", ""), "\n", ""), "%", "")
 }
 
 // Scrape - get stats for match of provided url
@@ -113,14 +113,14 @@ func Scrape(url string) matchData {
 				var d playerData
 				var statT stats
 				var statCT stats
-				e2.ForEach("td>span>span.mod-ct", func(_ int, e3 *colly.HTMLElement) {
+				e2.ForEach("span.mod-ct", func(_ int, e3 *colly.HTMLElement) {
 					statCT = append(statCT, strip(e3.Text))
 				})
-				e2.ForEach("td>span>span.mod-t", func(_ int, e3 *colly.HTMLElement) {
+				e2.ForEach("span.mod-t", func(_ int, e3 *colly.HTMLElement) {
 					statT = append(statT, strip(e3.Text))
 				})
 				e2.ForEach("td>div>a>div.text-of", func(_ int, e3 *colly.HTMLElement) {
-					d.player = strip(e3.Text)
+					d.player = s.TrimRight(strip(e3.Text), " ")
 				})
 				e2.ForEach("td>div>span>img", func(_ int, e3 *colly.HTMLElement) {
 					d.agent = e3.Attr("title")

@@ -1,50 +1,48 @@
 package my_db
 
 import (
-	"github.com/google/uuid"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 type Event struct {
-	ID uint
-	gorm.Model
-	EventName string
+	ID        uint64
+	EventName string `gorm:"unique"`
 	Maps      []Map
 }
 
 type Map struct {
-	ID         uint
-	EventID    uint
-	MatchUUID  uuid.UUID
+	ID         uint64
+	EventID    uint64
+	MatchUUID  string
+	MatchName  string
 	Team1      string
 	Team2      string
 	Team1Comp  string
 	Team2Comp  string
 	Winner     string
-	AtkRndsWon uint
-	DefRndsWon uint
+	AtkRndsWon uint64
+	DefRndsWon uint64
 	MapName    string
-	MatchName  string
 	Players    []Player
 }
 type Player struct {
-	ID         uint
-	MapID      uint
+	ID         uint64
+	MapID      uint64
 	PlayerName string
 	Team       string
 	MapName    string
 	Agent      string
-	Rating     uint
-	ACS        uint
-	Kills      uint
-	Deaths     uint
-	Assists    uint
-	KAST       uint
-	ADR        uint
-	HSP        uint
-	FK         uint
-	FD         uint
+	Rating     float64
+	ACS        uint64
+	Kills      uint64
+	Deaths     uint64
+	Assists    uint64
+	KAST       uint64
+	ADR        uint64
+	HSP        uint64
+	FK         uint64
+	FD         uint64
 	Side       string
 }
 
