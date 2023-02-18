@@ -1,4 +1,4 @@
-package scraper
+package GetMyData
 
 import (
 	gormdb "go-api/initial/my_db"
@@ -98,6 +98,7 @@ func findComp(rows []playerData) string {
 	for _, v := range rows {
 		comp = append(comp, v.agent)
 	}
+
 	sort.Strings(comp)
 	return strings.Join(comp, ",")
 }
@@ -106,10 +107,13 @@ func handleMap(gd gameData) gormdb.Map {
 	var mapData gormdb.Map
 	mapData.Team1 = gd.data[0]
 	mapData.Team2 = gd.data[1]
+
 	mapData.Team1Comp = findComp(gd.players[:5])
 	mapData.Team2Comp = findComp(gd.players[5:])
+
 	mapData.DefRndsWon = getStatUint(gd.data[2]) + getStatUint(gd.data[3])
 	mapData.AtkRndsWon = getStatUint(gd.data[4]) + getStatUint(gd.data[5])
+
 	mapData.Winner = findWinner(gd.data)
 	mapData.MapName = gd.mapname
 
@@ -126,14 +130,17 @@ func formatMapData(gd gameData, mID string, matchName string) gormdb.Map {
 
 	mapData.MatchName = matchName
 	mapData.MatchUUID = mID
+
 	return mapData
 }
 
 func handleMaps(gd []gameData, mID string, matchName string) []gormdb.Map {
 	var maps []gormdb.Map
+
 	for _, v := range gd {
 		maps = append(maps, formatMapData(v, mID, matchName))
 	}
+
 	return maps
 }
 
