@@ -5,6 +5,11 @@ import (
 	"gorm.io/gorm"
 )
 
+type HitLink struct {
+	ID   uint64
+	Link string `gorm:"unique"`
+}
+
 type Event struct {
 	ID        uint64
 	EventName string `gorm:"unique"`
@@ -51,5 +56,5 @@ func MigrateDB() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&Event{}, &Map{}, &Player{})
+	db.AutoMigrate(&Event{}, &Map{}, &Player{}, &HitLink{})
 }

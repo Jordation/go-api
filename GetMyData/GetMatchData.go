@@ -44,6 +44,10 @@ var statCategories = []string{"Rating", "ACS", "Kills", "Deaths", "Assists",
 
 func (s stats) MapData() mappedPlayerData {
 	ld := make(map[string]string)
+	if len(s) != len(statCategories) {
+		return ld
+	}
+
 	for i, v := range statCategories {
 		switch v {
 		case "":
@@ -68,11 +72,7 @@ func strip(str string) string {
 // Scrape - get stats for match of provided url
 func Scrape(url string) matchData {
 	var rd matchData
-
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL)
-	})
-
+	fmt.Println("Visiting: ", url)
 	//get map names
 	c.OnHTML("div.map>div>span", func(e *colly.HTMLElement) {
 		rd.mapNames = append(rd.mapNames, strip(s.Split(e.Text, "PICK")[0]))

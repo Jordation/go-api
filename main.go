@@ -29,7 +29,11 @@ func ReadQuery() (a.QueryForm, error) {
 
 func main() {
 
-	url := `https://www.vlr.gg/168037/95x-esports-vs-built-for-greatness-challengers-league-oceania-split-1-w3/?game=113776&tab=overview`
 	db.MigrateDB()
-	get.InsertWithURL(url)
+
+	//url := `https://www.vlr.gg/10258/envy-vs-sentinels-champions-tour-north-america-stage-1-challengers-2-gf`
+	//data := get.Scrape(url)
+	//get.MakeORMstruct(data)
+
+	get.InsertFromTextFile()
 }

@@ -1,6 +1,7 @@
 package GetMyData
 
 import (
+	"errors"
 	gormdb "go-api/initial/my_db"
 	"log"
 	"math"
@@ -14,14 +15,16 @@ import (
 func getStatUint(s string) uint64 {
 	i, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(s, err)
+		return 0
 	}
 	return i
 }
 func getStatFloat(s string) float64 {
 	i, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(s, err)
+		return 0
 	}
 	return i
 }
@@ -142,6 +145,29 @@ func handleMaps(gd []gameData, mID string, matchName string) []gormdb.Map {
 	}
 
 	return maps
+}
+
+func ValidateScrapedData(d matchData) error {
+	if len(d.matchInfo) != 6 {
+		return errors.New("malformed data")
+	}
+
+	for _, v := range d.gameData {
+		if len(v.data) != 6 {
+			return errors.New("malformed data")
+		}
+
+		if len(v.players) != 10 {
+			return errors.New("malformed data")
+		}
+		for _, v2 := range v.players {
+			if len(v2.statsCT)&len(v2.statsT) != 10 {
+				return errors.New("malformed data")
+			}
+		}
+	}
+
+	return nil
 }
 
 func MakeORMstruct(d matchData) gormdb.Event {

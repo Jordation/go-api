@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func InsertData(e Event) {
+func InsertEvent(e Event) {
 	db, err := gorm.Open(sqlite.Open("dev.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
