@@ -3,21 +3,29 @@ package api
 import (
 	"fmt"
 	"go-api/initial/my_db"
-	"log"
 	"strings"
 )
 
-func MakeQuery(base string, f *GlobalQueryFilters, target string) (string, []interface{}) {
+func MakeInnerQuery(f ListPlayersFilter) string {
+	query, args := MakeQuery(f)
+	for _, v := range args {
+		str := fmt.Sprintf("\"%v\"", v)
+		query = strings.Replace(query, "?", str, 1)
+	}
 
+	return "(" + query + ")"
+}
+func MakeQuery(f ListPlayersFilter) (string, []interface{}) {
+	//"\n\t\t\tSELECT\n\t\t\t\t*\n\t\t\tFROM players\n\t\t WHERE side IN (\"C\") AND map_name IN (\"Icebox\",\"Bind\",\"Ascent\",\"Haven\",\"Breeze\")"
 	var (
 		clauses []string
 		args    []interface{}
 	)
+	if f.Target != "" {
+		f.Query = strings.Replace(f.Query, "?", f.Target, 1)
+	}
 
-	base = strings.Replace(base, "?", target, 1)
-	filters := filter_process(f)
-
-	for filter, filterVals := range filters {
+	for filter, filterVals := range f.Filters {
 		if filterVals != nil {
 			clauses = append(clauses, filter+" IN ("+strings.Repeat("?,", len(filterVals)-1)+"?)")
 			for _, vals := range filterVals {
@@ -27,47 +35,99 @@ func MakeQuery(base string, f *GlobalQueryFilters, target string) (string, []int
 	}
 
 	if len(clauses) != 0 {
-		base += " WHERE " + strings.Join(clauses, " AND ")
+		f.Query += " WHERE " + strings.Join(clauses, " AND ")
 	}
 
-	return base, args
+	return f.Query, args
 }
 
-func ListUniquePlayers(query string, target string, args []interface{}) []string {
-	var results []string
+func GroupIterate(g1 []string, g2 []string, iq string, xt string, xg string) {
+	groups := make(map[string][]float64)
+	x_titles := []string{"x"}
+	query := strings.Replace(my_db.GetPlayerQueries()["listAVG"], "players", iq, 1)
 
-	db, err := my_db.GetDB()
-	if err != nil {
-		log.Fatal(err)
+	for _, v := range g1 {
+		x_titles = append(x_titles, v)
+		for _, v2 := range g2 {
+			f := ListPlayersFilter{
+				Query:   query,
+				Target:  "kills",
+				Filters: ArgClauseMap{xt: []string{v}, xg: []string{v2}},
+			}
+			newres := ListAveragePlayers(f)
+			groups[v2] = append(groups[v2], newres)
+		}
 	}
-
-	db.Raw(query, args...).Pluck(target, &results)
-	return results
+	fmt.Println(groups)
 }
 
 func GetGroupedBarData(q QueryForm) {
 
-	base1 := my_db.GetPlayerQueries()[my_db.PlayersListDistinct]
+	filters := mapQueryFilters(q.Global_Filters)
+	x_target := q.Graph_Params.X_target
+	x_grouping := q.Graph_Params.X2_target
 
-	query1, args1 := MakeQuery(base1, q.Global_Filters, q.Graph_Params.X_target)
-	query2, args2 := MakeQuery(base1, q.Global_Filters, q.Graph_Params.X2_target)
+	f1 := ListPlayersFilter{
+		Query:   my_db.GetPlayerQueries()["listDistinct"],
+		Filters: filters,
+		Target:  x_target,
+	}
+	f2 := ListPlayersFilter{
+		Query:   my_db.GetPlayerQueries()["listDistinct"],
+		Filters: filters,
+		Target:  x_grouping,
+	}
 
-	res1 := ListUniquePlayers(query1, q.Graph_Params.X_target, args1)
-	res2 := ListUniquePlayers(query2, q.Graph_Params.X2_target, args2)
+	res1 := ListUniquePlayers(f1)
+	res2 := ListUniquePlayers(f2)
 
-	fmt.Println("done")
+	f3 := ListPlayersFilter{
+		Query:   my_db.GetPlayerQueries()["list"],
+		Filters: filters,
+		Target:  "",
+	}
+
+	innerQuery := MakeInnerQuery(f3)
+
+	GroupIterate(res1, res2, innerQuery, x_target, x_grouping)
+
+	fmt.Println(innerQuery)
 	_, _ = res1, res2
 }
+func ListUniquePlayers(f ListPlayersFilter) []string {
 
-func ListPlayers(query string, args []interface{}) []*my_db.Player {
-	var results []*my_db.Player
+	query, args := MakeQuery(f)
+	var res []string
+
 	db, err := my_db.GetDB()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-	db.Raw(query, args...).Scan(&results)
-	if len(results) == 0 {
-		return nil
+
+	db.Raw(query, args...).Pluck(f.Target, &res)
+	return res
+}
+
+func ListAveragePlayers(f ListPlayersFilter) float64 {
+	var res float64
+	query, args := MakeQuery(f)
+
+	db, err := my_db.GetDB()
+	if err != nil {
+		panic(err)
 	}
-	return results
+	db.Raw(query, args...).Scan(&res)
+	return res
+}
+
+func ListPlayers(f ListPlayersFilter) ListPlayersResponse {
+	query, args := MakeQuery(f)
+	var res ListPlayersResponse
+
+	db, err := my_db.GetDB()
+	if err != nil {
+		panic(err)
+	}
+	db.Raw(query, args...).Scan(&res.players)
+	return res
 }

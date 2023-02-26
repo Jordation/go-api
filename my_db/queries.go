@@ -21,12 +21,12 @@ func GetPlayerQueries() map[string]string {
 		`,
 		PlayersListMAX: `
 			SELECT MAX
-			?
+			(?)
 			FROM players
 		`,
 		PlayersListAVG: `
 		SELECT AVG
-		?
+		(?)
 		FROM players
 	`,
 	}

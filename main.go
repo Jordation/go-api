@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"go-api/initial/GetMyData"
+	_ "go-api/initial/GetMyData"
 	a "go-api/initial/api"
-	"go-api/initial/my_db"
+	_ "go-api/initial/my_db"
+	"log"
 	"os"
 )
 
@@ -25,6 +26,12 @@ func ReadQuery() (a.QueryForm, error) {
 }
 
 func main() {
-	my_db.MigrateDB()
-	GetMyData.InsertFromTxtList()
+	q, err := ReadQuery()
+	if err != nil {
+		log.Println(err)
+	}
+	a.GetGroupedBarData(q)
+	//my_db.CleanDB()
+	//my_db.MigrateDB()
+	//GetMyData.InsertFromTxtList()
 }

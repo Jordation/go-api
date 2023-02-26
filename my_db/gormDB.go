@@ -64,6 +64,7 @@ func MigrateDB() {
 	}
 	db.AutoMigrate(&Event{}, &Map{}, &Player{}, &HitLink{})
 }
+
 func CheckPlayerRow(r Player) bool {
 	if r.MapName == "" {
 		return false
@@ -71,7 +72,7 @@ func CheckPlayerRow(r Player) bool {
 	if r.PlayerName == "" {
 		return false
 	}
-	if r.Rating == 0 && r.Deaths == 0 && r.ACS == 0 {
+	if (r.Kills == r.Deaths && r.Kills == 0) == (r.Assists == r.ACS && r.Assists == 0) {
 		return false
 	}
 	return true

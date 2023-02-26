@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"go-api/initial/my_db"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ func (f *StrToBool) UnmarshalJSON(b []byte) error {
 }
 
 // helper bc i dont want to work on my frontend any more
-func filter_process(f *GlobalQueryFilters) map[string][]string {
+func mapQueryFilters(f *GlobalQueryFilters) map[string][]string {
 	filters := make(map[string][]string)
 	filters["agent"] = strings.Split(f.Agents, ", ")
 	filters["map_name"] = strings.Split(f.Mapnames, ", ")
@@ -64,4 +65,17 @@ type QueryForm struct {
 	Global_Filters *GlobalQueryFilters
 	Data_Params    *DataParams
 	Graph_Params   *GraphParams
+}
+
+type ArgClauseMap map[string][]string
+
+type ListPlayersResponse struct {
+	players []my_db.Player
+}
+
+type ListPlayersFilter struct {
+	//			  arg    : clause
+	Filters ArgClauseMap
+	Query   string
+	Target  string
 }

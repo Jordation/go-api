@@ -3,13 +3,11 @@ package GetMyData
 import (
 	gormdb "go-api/initial/my_db"
 	"log"
-	"sync"
 )
 
-func InsertWithURL(url string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	data := Scrape(url)
+// wg *sync.WaitGroup
+func InsertWithURL(url string) {
+	data := *Scrape(url)
 
 	if err := ValidateScrapedData(data); err != nil {
 		log.Println("Not inserting URL: ", url, err)
@@ -23,7 +21,7 @@ func InsertWithURL(url string, wg *sync.WaitGroup) {
 func InsertFromTxtList() {
 	var (
 		matchLinks []string
-		wg         sync.WaitGroup
+		//wg         sync.WaitGroup
 	)
 
 	events := ReadEachLineFromFile()
@@ -35,8 +33,9 @@ func InsertFromTxtList() {
 		if err := gormdb.CheckMatchLink(l); err != nil {
 			continue
 		}
-		wg.Add(1)
-		go InsertWithURL(l, &wg)
+		//wg.Add(1)
+		//go InsertWithURL(l, &wg)
+		InsertWithURL(l)
 	}
-	wg.Wait()
+	//wg.Wait()
 }
