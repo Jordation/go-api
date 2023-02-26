@@ -38,4 +38,5 @@ func InsertFromTxtList() {
 		wg.Add(1)
 		go InsertWithURL(l, &wg)
 	}
+	wg.Wait()
 }
