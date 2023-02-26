@@ -3,12 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"go-api/initial/GetMyData"
 	a "go-api/initial/api"
-
-	get "go-api/initial/GetMyData"
-	db "go-api/initial/my_db"
-
-	//pq "go-api/initial/processQuery"
+	"go-api/initial/my_db"
 	"os"
 )
 
@@ -28,12 +25,6 @@ func ReadQuery() (a.QueryForm, error) {
 }
 
 func main() {
-
-	db.MigrateDB()
-
-	//url := `https://www.vlr.gg/10258/envy-vs-sentinels-champions-tour-north-america-stage-1-challengers-2-gf`
-	//data := get.Scrape(url)
-	//get.MakeORMstruct(data)
-
-	get.InsertFromTextFile()
+	my_db.MigrateDB()
+	GetMyData.InsertFromTxtList()
 }

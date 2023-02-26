@@ -1,154 +1,73 @@
 package api
 
 import (
+	"fmt"
+	"go-api/initial/my_db"
 	"log"
-	"reflect"
-	"strconv"
-
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	"strings"
 )
 
-func GetWordsForGroups(r map[string][]PlayerStatsResult) [][]string {
-
-	groups := make([][]string, len(r))
-	c := 0
-	for k, v := range r {
-		switch k {
-		case "player":
-			for _, v := range v {
-				groups[c] = append(groups[c], v.Player)
-			}
-		case "agent":
-			for _, v := range v {
-				groups[c] = append(groups[c], v.Agent)
-			}
-		case "mapname":
-			for _, v := range v {
-				groups[c] = append(groups[c], v.Mapname)
-			}
-		case "team":
-			for _, v := range v {
-				groups[c] = append(groups[c], v.Team)
-			}
-		}
-		c++
-	}
-	return groups
-}
-
-func GetRowsAsGroups(f GetRowsAsGroupsFilters) (map[[2]string]interface{}, error) {
-	var (
-		groupedResults = make(map[[2]string]interface{})
-		prefix         string
-	)
-	// Connect to DB
-	db, err := gorm.Open(sqlite.Open("./my_db/test.db"), &gorm.Config{})
-	if err != nil {
-		log.Fatal(err)
-	}
-	// get innter statement for group query
-	inner_stmt, _, err := f.Filters.MakeSQLStmt(true)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// using avg function in raw db call seems to be what causes the nested interfaces on float vals
-	if f.ResultType.Avg {
-		prefix = `AVG(` + f.Y_target + `)`
-	}
-	// (bc it doesnt happen with this value)
-	if f.ResultType.Max {
-		prefix = f.Y_target
-	}
-	// for each group get matching rows
-	for _, grp_vals := range f.Groups {
-		var result map[string]interface{}
-		stmt := `SELECT ` + prefix + ` FROM 
-		(` + inner_stmt + `) WHERE `
-		stmt += f.Columns[0] + ` IN ("` + grp_vals[0] + `") 
-		AND ` + f.Columns[1] + ` IN ("` + grp_vals[1] + `") `
-
-		// result nil if row count < min_ds_size  if resulttype.max then just return 1 row
-		if f.ResultType.Max {
-			stmt += `GROUP BY ` + f.Y_target +
-				` HAVING COUNT(*) >= ` + strconv.Itoa(f.Min_ds_size) +
-				` ORDER BY ` + f.Y_target + ` DESC LIMIT 1`
-		} else {
-			// avg is already prefixed so just check for min_ds_size
-			stmt += `HAVING COUNT(*) >= ` + strconv.Itoa(f.Min_ds_size)
-		}
-
-		db.Raw(stmt).Scan(&result)
-		// if result is found add to grouped results
-		if result[prefix] != nil {
-			if f.ResultType.Avg {
-				groupedResults[grp_vals] = result[prefix]
-			} else {
-				groupedResults[grp_vals] = result[prefix].(int64)
-			}
-		}
-	}
-
-	return groupedResults, nil
-}
-
-func ListPlayerStats(f ListPlayerStatsFilters, qf QueryForm) (
-	[]PlayerStatsResult, // results of rows
-	[][]string, // results of columns
-	error) {
+func MakeQuery(base string, f *GlobalQueryFilters, target string) (string, []interface{}) {
 
 	var (
-		cols       = make(map[string][]PlayerStatsResult)
-		results    []PlayerStatsResult
-		groups     [][]string
-		inner_stmt string
+		clauses []string
+		args    []interface{}
 	)
 
-	// Connect to DB
-	db, err := gorm.Open(sqlite.Open("./my_db/test.db"), &gorm.Config{})
+	base = strings.Replace(base, "?", target, 1)
+	filters := filter_process(f)
+
+	for filter, filterVals := range filters {
+		if filterVals != nil {
+			clauses = append(clauses, filter+" IN ("+strings.Repeat("?,", len(filterVals)-1)+"?)")
+			for _, vals := range filterVals {
+				args = append(args, vals)
+			}
+		}
+	}
+
+	if len(clauses) != 0 {
+		base += " WHERE " + strings.Join(clauses, " AND ")
+	}
+
+	return base, args
+}
+
+func ListUniquePlayers(query string, target string, args []interface{}) []string {
+	var results []string
+
+	db, err := my_db.GetDB()
 	if err != nil {
 		log.Fatal(err)
-		return nil, nil, err
-	}
-	// if no filters at all return all rows
-	if *qf.Global_Filters != (GlobalQueryFilters{}) {
-		inner_stmt, _, err = qf.Global_Filters.MakeSQLStmt(true)
-		if err != nil {
-			log.Fatal(err)
-			return nil, nil, err
-		}
-	} else {
-		inner_stmt = "SELECT * FROM player_stats_combined"
 	}
 
-	// If no filters, return all rows
-	if reflect.DeepEqual(f, ListPlayerStatsFilters{}) {
-		inner_stmt += " ORDER BY \"" + qf.Graph_Params.Y_target + "\" ASC"
-		var result []PlayerStatsResult
-		db.Raw(inner_stmt).Scan(&result)
-		return results, nil, nil
+	db.Raw(query, args...).Pluck(target, &results)
+	return results
+}
+
+func GetGroupedBarData(q QueryForm) {
+
+	base1 := my_db.GetPlayerQueries()[my_db.PlayersListDistinct]
+
+	query1, args1 := MakeQuery(base1, q.Global_Filters, q.Graph_Params.X_target)
+	query2, args2 := MakeQuery(base1, q.Global_Filters, q.Graph_Params.X2_target)
+
+	res1 := ListUniquePlayers(query1, q.Graph_Params.X_target, args1)
+	res2 := ListUniquePlayers(query2, q.Graph_Params.X2_target, args2)
+
+	fmt.Println("done")
+	_, _ = res1, res2
+}
+
+func ListPlayers(query string, args []interface{}) []*my_db.Player {
+	var results []*my_db.Player
+	db, err := my_db.GetDB()
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	// If request specifies columns, return a grouped list of columns and rows
-	if f.Columns != nil {
-		for _, col := range f.Columns {
-			var col_result []PlayerStatsResult
-			col_stmt := "SELECT "
-			if f.Unique {
-				col_stmt += "DISTINCT "
-			}
-			col_stmt += col + " FROM (" + inner_stmt + ")"
-			db.Raw(col_stmt).Scan(&col_result)
-			cols[col] = col_result
-		}
-		stmt := `SELECT * FROM ( ` + inner_stmt + `) 
-		ORDER BY "` + qf.Graph_Params.Y_target + `" ASC`
-
-		db.Raw(stmt).Scan(&results)
-		groups = GetWordsForGroups(cols)
-		return results, groups, nil
+	db.Raw(query, args...).Scan(&results)
+	if len(results) == 0 {
+		return nil
 	}
-
-	return nil, nil, nil
+	return results
 }

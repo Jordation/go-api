@@ -1,6 +1,8 @@
 package my_db
 
 import (
+	"fmt"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -51,10 +53,46 @@ type Player struct {
 	Side       string
 }
 
+func GetDB() (*gorm.DB, error) {
+	return gorm.Open(sqlite.Open("dev.db"), &gorm.Config{})
+}
+
 func MigrateDB() {
-	db, err := gorm.Open(sqlite.Open("dev.db"), &gorm.Config{})
+	db, err := GetDB()
 	if err != nil {
 		panic("failed to connect database")
 	}
 	db.AutoMigrate(&Event{}, &Map{}, &Player{}, &HitLink{})
+}
+func CheckPlayerRow(r Player) bool {
+	if r.MapName == "" {
+		return false
+	}
+	if r.PlayerName == "" {
+		return false
+	}
+	if r.Rating == 0 && r.Deaths == 0 && r.ACS == 0 {
+		return false
+	}
+	return true
+}
+
+func CleanDB() {
+	db, err := GetDB()
+	if err != nil {
+		panic("failed to connect database")
+	}
+
+	var players []Player
+	result := db.Find(&players)
+	if result.Error != nil {
+		fmt.Println(result.Error.Error())
+	}
+
+	for _, p := range players {
+		if !CheckPlayerRow(p) {
+			fmt.Println("deleting", p)
+			db.Delete(&p)
+		}
+	}
 }

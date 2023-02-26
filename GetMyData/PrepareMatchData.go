@@ -33,14 +33,14 @@ func makeCombinedStruct(atkP gormdb.Player, defP gormdb.Player) gormdb.Player {
 	var comStat gormdb.Player
 	comStat.Rating = math.Round(((atkP.Rating+defP.Rating)/2)*100) / 100
 	comStat.ACS = (atkP.ACS + defP.ACS) / 2
-	comStat.Kills = (atkP.Kills + defP.Kills) / 2
-	comStat.Deaths = (atkP.Deaths + defP.Deaths) / 2
-	comStat.Assists = (atkP.Assists + defP.Assists) / 2
+	comStat.Kills = (atkP.Kills + defP.Kills)
+	comStat.Deaths = (atkP.Deaths + defP.Deaths)
+	comStat.Assists = (atkP.Assists + defP.Assists)
 	comStat.KAST = (atkP.KAST + defP.KAST) / 2
 	comStat.ADR = (atkP.ADR + defP.ADR) / 2
 	comStat.HSP = (atkP.HSP + defP.HSP) / 2
-	comStat.FK = (atkP.FK + defP.FK) / 2
-	comStat.FD = (atkP.FD + defP.FD) / 2
+	comStat.FK = (atkP.FK + defP.FK)
+	comStat.FD = (atkP.FD + defP.FD)
 	comStat.Side = "C"
 	comStat.PlayerName = atkP.PlayerName
 	comStat.MapName = atkP.MapName

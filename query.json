@@ -2,13 +2,13 @@
 "mapnames": "",
 "players": "",
 "teams": "",
-"side": "combined",
+"side": "C",
 "average_rows_to_groups": "yer",
 "order_by_y_target": "yes",
 "min_dataset_size": "2",
 "y_target": "k",
-"x_target": "mapname",
-"x2_target": "player",
+"x_target": "map_name",
+"x2_target": "agent",
 "max_dataset_width": "5",
 "query_level": "2"
 }

@@ -14,6 +14,9 @@ func ReadEachLineFromFile() []string {
 	if err != nil {
 		panic(err)
 	}
+
+	defer file.Close()
+
 	scanner := bufio.NewScanner(file)
 
 	scanner.Split(bufio.ScanLines)
@@ -21,7 +24,7 @@ func ReadEachLineFromFile() []string {
 	for scanner.Scan() {
 		links = append(links, scanner.Text())
 	}
-	file.Close()
+
 	return links
 }
 
@@ -34,19 +37,4 @@ func GetMatchLinksFromEvent(url string) []string {
 	})
 	c.Visit(url)
 	return links
-}
-
-func InsertFromTextFile() error {
-	var matchLinks []string
-
-	eventLinks := ReadEachLineFromFile()
-	for _, link := range eventLinks {
-		matchLinks = append(matchLinks, GetMatchLinksFromEvent(link)...)
-	}
-
-	for _, l := range matchLinks {
-		InsertWithURL(l)
-	}
-
-	return nil
 }
