@@ -106,7 +106,6 @@ func Scrape(url string) *matchData {
 			e.ForEach("div.vm-stats-game-header>div.team>div>span.mod-t", func(_ int, e2 *colly.HTMLElement) {
 				mapdata.data = append(mapdata.data, strip(e2.Text))
 			})
-			fmt.Printf("mapNames: %+v\n, mapCount: %+v\n, length of mapNames: %+v\n", rd.mapNames, rd.mapCount, len(rd.mapNames))
 			mapdata.mapname = rd.mapNames[rd.mapCount]
 
 			// group rows of player stats

@@ -8,6 +8,7 @@ import (
 
 func MakeInnerQuery(f ListPlayersFilter) string {
 	query, args := MakeQuery(f)
+
 	for _, v := range args {
 		str := fmt.Sprintf("\"%v\"", v)
 		query = strings.Replace(query, "?", str, 1)
@@ -16,11 +17,11 @@ func MakeInnerQuery(f ListPlayersFilter) string {
 	return "(" + query + ")"
 }
 func MakeQuery(f ListPlayersFilter) (string, []interface{}) {
-	//"\n\t\t\tSELECT\n\t\t\t\t*\n\t\t\tFROM players\n\t\t WHERE side IN (\"C\") AND map_name IN (\"Icebox\",\"Bind\",\"Ascent\",\"Haven\",\"Breeze\")"
 	var (
 		clauses []string
 		args    []interface{}
 	)
+
 	if f.Target != "" {
 		f.Query = strings.Replace(f.Query, "?", f.Target, 1)
 	}
@@ -58,6 +59,7 @@ func GroupIterate(g1 []string, g2 []string, iq string, xt string, xg string) {
 			groups[v2] = append(groups[v2], newres)
 		}
 	}
+
 	fmt.Println(groups)
 }
 
@@ -95,9 +97,9 @@ func GetGroupedBarData(q QueryForm) {
 	_, _ = res1, res2
 }
 func ListUniquePlayers(f ListPlayersFilter) []string {
+	var res []string
 
 	query, args := MakeQuery(f)
-	var res []string
 
 	db, err := my_db.GetDB()
 	if err != nil {
@@ -110,24 +112,28 @@ func ListUniquePlayers(f ListPlayersFilter) []string {
 
 func ListAveragePlayers(f ListPlayersFilter) float64 {
 	var res float64
+
 	query, args := MakeQuery(f)
 
 	db, err := my_db.GetDB()
 	if err != nil {
 		panic(err)
 	}
+
 	db.Raw(query, args...).Scan(&res)
 	return res
 }
 
 func ListPlayers(f ListPlayersFilter) ListPlayersResponse {
-	query, args := MakeQuery(f)
 	var res ListPlayersResponse
+
+	query, args := MakeQuery(f)
 
 	db, err := my_db.GetDB()
 	if err != nil {
 		panic(err)
 	}
+
 	db.Raw(query, args...).Scan(&res.players)
 	return res
 }
