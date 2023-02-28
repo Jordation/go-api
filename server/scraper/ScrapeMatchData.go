@@ -1,4 +1,4 @@
-package GetMyData
+package scraper
 
 // url https://www.vlr.gg/168037/95x-esports-vs-built-for-greatness-challengers-league-oceania-split-1-w3
 // class="wf-card  match-header" - Team names, score, event title, match title, date

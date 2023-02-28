@@ -1,4 +1,4 @@
-module go-api/initial
+module go-api
 
 go 1.19
 

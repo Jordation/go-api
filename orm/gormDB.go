@@ -1,4 +1,4 @@
-package my_db
+package orm
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package GetMyData
+package scraper
 
 import (
 	"bufio"

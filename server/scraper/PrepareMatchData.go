@@ -1,8 +1,8 @@
-package GetMyData
+package scraper
 
 import (
 	"errors"
-	gormdb "go-api/initial/my_db"
+	"go-api/orm"
 	"log"
 	"math"
 	"sort"
@@ -29,8 +29,8 @@ func getStatFloat(s string) float64 {
 	return i
 }
 
-func makeCombinedStruct(atkP gormdb.Player, defP gormdb.Player) gormdb.Player {
-	var comStat gormdb.Player
+func makeCombinedStruct(atkP orm.Player, defP orm.Player) orm.Player {
+	var comStat orm.Player
 	comStat.Rating = math.Round(((atkP.Rating+defP.Rating)/2)*100) / 100
 	comStat.ACS = (atkP.ACS + defP.ACS) / 2
 	comStat.Kills = (atkP.Kills + defP.Kills)
@@ -48,7 +48,7 @@ func makeCombinedStruct(atkP gormdb.Player, defP gormdb.Player) gormdb.Player {
 	comStat.Team = atkP.Team
 	return comStat
 }
-func makePlayerStruct(p gormdb.Player, md mappedPlayerData, side string) gormdb.Player {
+func makePlayerStruct(p orm.Player, md mappedPlayerData, side string) orm.Player {
 	p.Rating = getStatFloat(md["Rating"])
 	p.ACS = getStatUint(md["ACS"])
 	p.Kills = getStatUint(md["Kills"])
@@ -64,8 +64,8 @@ func makePlayerStruct(p gormdb.Player, md mappedPlayerData, side string) gormdb.
 }
 
 // takes single row of data from scraper, returns struct for atk, def and combined statline
-func formatPlayerData(d playerData, team string, mapname string) []gormdb.Player {
-	var pStats gormdb.Player
+func formatPlayerData(d playerData, team string, mapname string) []orm.Player {
+	var pStats orm.Player
 	pStats.Agent = d.agent
 	pStats.PlayerName = d.player
 	pStats.Team = team
@@ -74,12 +74,12 @@ func formatPlayerData(d playerData, team string, mapname string) []gormdb.Player
 	atkStat := makePlayerStruct(pStats, d.statsT, "A")
 	defStat := makePlayerStruct(pStats, d.statsCT, "D")
 	comStat := makeCombinedStruct(atkStat, defStat)
-	return []gormdb.Player{atkStat, defStat, comStat}
+	return []orm.Player{atkStat, defStat, comStat}
 }
 
 // takes 5 rows of data from scraper along with the matching team
-func handleTeam(players []playerData, team string, mapname string) []gormdb.Player {
-	var rows []gormdb.Player
+func handleTeam(players []playerData, team string, mapname string) []orm.Player {
+	var rows []orm.Player
 	for _, v := range players {
 		rows = append(rows, formatPlayerData(v, team, mapname)...)
 	}
@@ -106,8 +106,8 @@ func findComp(rows []playerData) string {
 	return strings.Join(comp, ",")
 }
 
-func handleMap(gd gameData) gormdb.Map {
-	var mapData gormdb.Map
+func handleMap(gd gameData) orm.Map {
+	var mapData orm.Map
 	mapData.Team1 = gd.data[0]
 	mapData.Team2 = gd.data[1]
 
@@ -123,8 +123,8 @@ func handleMap(gd gameData) gormdb.Map {
 	return mapData
 }
 
-func formatMapData(gd gameData, mID string, matchName string) gormdb.Map {
-	var playerMapData []gormdb.Player
+func formatMapData(gd gameData, mID string, matchName string) orm.Map {
+	var playerMapData []orm.Player
 	mapData := handleMap(gd)
 
 	playerMapData = append(playerMapData, handleTeam(gd.players[:5], mapData.Team1, mapData.MapName)...)
@@ -137,8 +137,8 @@ func formatMapData(gd gameData, mID string, matchName string) gormdb.Map {
 	return mapData
 }
 
-func handleMaps(gd []gameData, mID string, matchName string) []gormdb.Map {
-	var maps []gormdb.Map
+func handleMaps(gd []gameData, mID string, matchName string) []orm.Map {
+	var maps []orm.Map
 
 	for _, v := range gd {
 		maps = append(maps, formatMapData(v, mID, matchName))
@@ -170,8 +170,8 @@ func ValidateScrapedData(d matchData) error {
 	return nil
 }
 
-func MakeORMstruct(d matchData) gormdb.Event {
-	var e gormdb.Event
+func MakeORMstruct(d matchData) orm.Event {
+	var e orm.Event
 	e.EventName = d.matchInfo[0]
 	matchName := d.matchInfo[1]
 	matchID := uuid.New().String()

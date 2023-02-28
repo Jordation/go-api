@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"go-api/initial/GetMyData"
-	a "go-api/initial/api"
-	"go-api/initial/my_db"
+	a "go-api/api"
+	"go-api/orm"
+	"go-api/server/scraper"
 	_ "log"
 	"os"
 )
@@ -31,7 +31,7 @@ func main() {
 	//	log.Println(err)
 	//}
 	//a.GetGroupedBarData(q)
-	my_db.MigrateDB()
-	GetMyData.InsertFromTxtList()
-	my_db.CleanDB()
+	orm.MigrateDB()
+	scraper.InsertFromTxtList()
+	orm.CleanDB()
 }

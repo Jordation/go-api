@@ -1,7 +1,7 @@
-package GetMyData
+package scraper
 
 import (
-	gormdb "go-api/initial/my_db"
+	"go-api/orm"
 	"log"
 )
 
@@ -15,7 +15,7 @@ func InsertWithURL(url string) {
 	}
 
 	database_data := MakeORMstruct(data)
-	gormdb.InsertEvent(database_data)
+	orm.InsertEvent(database_data)
 }
 
 func InsertFromTxtList() {
@@ -30,7 +30,7 @@ func InsertFromTxtList() {
 	}
 
 	for _, l := range matchLinks {
-		if err := gormdb.CheckMatchLink(l); err != nil {
+		if err := orm.CheckMatchLink(l); err != nil {
 			continue
 		}
 		//wg.Add(1)
