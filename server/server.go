@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/gorilla/mux"
 )
@@ -42,14 +43,14 @@ func getGroupedBar(w http.ResponseWriter, r *http.Request) {
 	//}
 	json.NewEncoder(w).Encode(data)
 }
-func StartServer() {
+func StartServer(wg *sync.WaitGroup) {
 
 	r := mux.NewRouter()
 
 	r.HandleFunc("/graphs/groupedBar", getGroupedBar).Methods("GET")
 
+	fmt.Println("Starting server on port 8000")
 	if err := http.ListenAndServe(":8000", r); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Starting server on port 8000")
 }
