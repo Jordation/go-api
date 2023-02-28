@@ -75,7 +75,8 @@ type ListStatsResponse struct {
 
 type ListStatsFilter struct {
 	//			  arg    : clause
-	Filters ArgClauseMap
-	Query   string
-	Target  string
+	Filters            ArgClauseMap
+	MinimumDatasetSize int
+	Query              string
+	Target             string
 }

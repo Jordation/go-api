@@ -4,8 +4,17 @@ import (
 	"fmt"
 	"go-api/api"
 	"go-api/orm"
+	"math"
 	"strings"
 )
+
+func round(num float64) int {
+	return int(num + math.Copysign(0.5, num))
+}
+func toFixed(num float64, precision int) float64 {
+	output := math.Pow(10, float64(precision))
+	return float64(round(num*output)) / output
+}
 
 func MakeInnerQuery(f api.ListStatsFilter) string {
 	query, args := MakeQuery(f)
@@ -17,6 +26,14 @@ func MakeInnerQuery(f api.ListStatsFilter) string {
 
 	return "(" + query + ")"
 }
+func AddHavingClause(g []string) string {
+	clause := "GROUP BY (? AND ?) HAVING COUNT(*) > ?"
+	for _, v := range g {
+		clause = strings.Replace(clause, "?", v, 1)
+	}
+	return clause
+}
+
 func MakeQuery(f api.ListStatsFilter) (string, []interface{}) {
 	var (
 		clauses []string
@@ -40,63 +57,20 @@ func MakeQuery(f api.ListStatsFilter) (string, []interface{}) {
 		f.Query += " WHERE " + strings.Join(clauses, " AND ")
 	}
 
+	if f.MinimumDatasetSize != 0 {
+		args = append(args, f.MinimumDatasetSize)
+		var gs []string
+		if len(f.Filters) == 2 {
+			for k := range f.Filters {
+				gs = append(gs, k)
+			}
+		}
+		f.Query += AddHavingClause(gs)
+	}
+
 	return f.Query, args
 }
 
-func GroupIterate(g1 []string, g2 []string, iq string, xt string, xg string) {
-	groups := make(map[string][]float64)
-	x_titles := []string{"x"}
-	query := strings.Replace(orm.GetPlayerQueries()["listAVG"], "players", iq, 1)
-
-	for _, v := range g1 {
-		x_titles = append(x_titles, v)
-		for _, v2 := range g2 {
-			f := api.ListStatsFilter{
-				Query:   query,
-				Target:  "kills",
-				Filters: api.ArgClauseMap{xt: []string{v}, xg: []string{v2}},
-			}
-			newres := ListAverageStat(f)
-			groups[v2] = append(groups[v2], newres)
-		}
-	}
-
-	fmt.Println(groups)
-}
-
-func GetGroupedBarData(q api.QueryForm) {
-
-	filters := api.MapQueryFilters(q.Global_Filters)
-	x_target := q.Graph_Params.X_target
-	x_grouping := q.Graph_Params.X2_target
-
-	f1 := api.ListStatsFilter{
-		Query:   orm.GetPlayerQueries()["listDistinct"],
-		Filters: filters,
-		Target:  x_target,
-	}
-	f2 := api.ListStatsFilter{
-		Query:   orm.GetPlayerQueries()["listDistinct"],
-		Filters: filters,
-		Target:  x_grouping,
-	}
-
-	res1 := ListUniqueStats(f1)
-	res2 := ListUniqueStats(f2)
-
-	f3 := api.ListStatsFilter{
-		Query:   orm.GetPlayerQueries()["list"],
-		Filters: filters,
-		Target:  "",
-	}
-
-	innerQuery := MakeInnerQuery(f3)
-
-	GroupIterate(res1, res2, innerQuery, x_target, x_grouping)
-
-	fmt.Println(innerQuery)
-	_, _ = res1, res2
-}
 func ListUniqueStats(f api.ListStatsFilter) (res []string) {
 
 	query, args := MakeQuery(f)
@@ -120,7 +94,7 @@ func ListAverageStat(f api.ListStatsFilter) (res float64) {
 	}
 
 	db.Raw(query, args...).Scan(&res)
-	return res
+	return toFixed(res, 2)
 }
 
 func ListStats(f api.ListStatsFilter) (res api.ListStatsResponse) {

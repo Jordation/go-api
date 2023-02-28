@@ -3,15 +3,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	a "go-api/api"
-	"go-api/orm"
-	"go-api/server/scraper"
-	_ "log"
+	"go-api/api"
+	_ "go-api/orm"
+	"go-api/server/graphs"
+	_ "go-api/server/scraper"
+	"log"
 	"os"
 )
 
-func ReadQuery() (a.QueryForm, error) {
-	var query a.QueryForm
+func ReadQuery() (api.QueryForm, error) {
+	var query api.QueryForm
 	bytes, err := os.ReadFile("query.json")
 	if err != nil {
 		fmt.Println(err.Error())
@@ -26,12 +27,9 @@ func ReadQuery() (a.QueryForm, error) {
 }
 
 func main() {
-	//q, err := ReadQuery()
-	//if err != nil {
-	//	log.Println(err)
-	//}
-	//a.GetGroupedBarData(q)
-	orm.MigrateDB()
-	scraper.InsertFromTxtList()
-	orm.CleanDB()
+	q, err := ReadQuery()
+	if err != nil {
+		log.Println(err)
+	}
+	graphs.GetGroupedBarData(q)
 }

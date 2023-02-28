@@ -7,7 +7,7 @@ const (
 	PlayersListAVG      = "listAVG"
 )
 
-func GetPlayerQueries() map[string]string {
+func GetStatQueries() map[string]string {
 	return map[string]string{
 		PlayersList: `
 			SELECT
