@@ -1,4 +1,5 @@
 "use client"
+import { BarOptions } from './ChartConfigs'
 import {use, useState} from 'react';
 import {
     Chart as ChartJS,
@@ -10,47 +11,20 @@ import {
     Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { Props, ScriptProps } from 'next/script';
 
-const options = {
-    plugins: {
-        title: {
-            display: true,
-            text: 'Chart.js Bar Chart - Stacked',
-        },
-    },
-    responsive: true,
-    interaction: {
-        mode: 'index' as const,
-        intersect: false,
-    },
-};
-
-async function processQuery(query: object){
-    let data = fetch("http://localhost:8000/testing", {method: "POST", body: JSON.stringify({q: query})})
-    .then(res => res.json)
-    .catch(error => console.error(error))
-    return data
-}
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 export default function GraphWithParams({query}: any) {
-
-    //fetch("http://localhost:8000/testing", {method: "POST", body: JSON.stringify({q: query})})
-    //.then(res => res.json)
-    //.then(res => setTheData(res))
-
-    let fetcheddata = use(processQuery(query))
-
-    const [thedata, setTheData] = useState({})
-
-    ChartJS.register(
-        CategoryScale,
-        LinearScale,
-        BarElement,
-        Title,
-        Tooltip,
-        Legend
-    );
+    const [Data, setData] = useState({})
+    const handleClick = () => {
+        fetch("http://localhost:8000/testing", {method: "POST", body: JSON.stringify({q: query})})}
 
     const labels = ["aye", "two", "four"]
     const chartData = ["1", "2", "3"]
@@ -67,22 +41,10 @@ export default function GraphWithParams({query}: any) {
     return (
         <>
             <div>im the div
-            <Bar options={options} data={data} />
-            {JSON.stringify(fetcheddata)}
-            {JSON.stringify(thedata)}
+            <Bar options={BarOptions} data={data} />
+            <button onClick={handleClick}>click me</button>
             holding the graph</div>
         </>
 
     )
 }
-
-
-
-// export default function GraphHolder({ props, params }){
-    // let query = params.query
-    // return (
-        // <>
-        {/*  */}
-        {/* </> */}
-    // )
-// }

@@ -13,6 +13,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type testRequest struct {
+	BodyOfReq string `json:"q"`
+}
+
 func ReadQuery() (api.QueryForm, error) {
 	var query api.QueryForm
 	bytes, err := os.ReadFile("query.json")
@@ -44,10 +48,12 @@ func getGroupedBar(w http.ResponseWriter, r *http.Request) {
 }
 
 func testing(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	query := mux.Vars(r)["q"]
-	fmt.Println(query)
-	json.NewEncoder(w).Encode("it worked!")
+	var data testRequest
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(data)
 }
 
 func StartServer(wg *sync.WaitGroup) {
