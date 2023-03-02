@@ -29,7 +29,6 @@ func ReadQuery() (api.QueryForm, error) {
 
 func getGroupedBar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	// query := mux.Vars(r)["query"]
 	q, err := ReadQuery()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -43,11 +42,20 @@ func getGroupedBar(w http.ResponseWriter, r *http.Request) {
 	//}
 	json.NewEncoder(w).Encode(data)
 }
+
+func testing(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	query := mux.Vars(r)["q"]
+	fmt.Println(query)
+	json.NewEncoder(w).Encode("it worked!")
+}
+
 func StartServer(wg *sync.WaitGroup) {
 
 	r := mux.NewRouter()
 
 	r.HandleFunc("/graphs/groupedBar", getGroupedBar).Methods("GET")
+	r.HandleFunc("/testing", testing).Methods("POST")
 
 	fmt.Println("Starting server on port 8000")
 	if err := http.ListenAndServe(":8000", r); err != nil {
