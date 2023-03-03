@@ -41,10 +41,7 @@ func getGroupedBar(w http.ResponseWriter, r *http.Request) {
 }
 
 func testing(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	query := mux.Vars(r)["q"]
-	fmt.Println(query)
-	json.NewEncoder(w).Encode("it worked!")
+	fmt.Println("Req recieved")
 }
 
 func StartServer(wg *sync.WaitGroup) {
