@@ -1,14 +1,15 @@
-{"agents": "",
-"mapnames": "Icebox, Bind, Ascent, Haven, Breeze",
-"players": "",
-"teams": "",
-"side": "C",
-"average_rows_to_groups": "yer",
-"order_by_y_target": "yes",
-"min_dataset_size": "2",
-"y_target": "kills",
-"x_target": "map_name",
-"x2_target": "agent",
-"max_dataset_width": "5",
-"query_level": "2"
+{
+    "filters": {
+        "agents": "",
+        "mapnames": "Icebox, Bind, Ascent, Haven, Breeze",
+        "players": "",
+        "teams": "",
+        "side": "C"
+    },
+    "x_target": "mapname",
+    "x_groups_target": "agent",
+    "y_target": "kills",
+    "min_dataset_size": "5",
+    "max_dataset_amount": "10",
+    "average_results": true
 }

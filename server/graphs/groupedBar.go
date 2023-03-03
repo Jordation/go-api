@@ -30,11 +30,11 @@ func groupIterate(g1 []string, g2 []string, iq string, xt string, xg string) (re
 	return res
 }
 
-func GetGroupedBarData(q api.QueryForm) (res GroupedBarResponse) {
+func GetGroupedBarData(q GroupedBarRequest) (res GroupedBarResponse) {
 
-	filters := api.MapQueryFilters(q.Global_Filters)
-	x_target := q.Graph_Params.X_target
-	x_grouping := q.Graph_Params.X2_target
+	filters := MapQueryFilters(q.Filters)
+	x_target := q.XTarget
+	x_grouping := q.XGroupsTarget
 
 	f1 := api.ListStatsFilter{
 		Query:   orm.GetStatQueries()["listDistinct"],

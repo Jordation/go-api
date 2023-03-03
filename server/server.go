@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"go-api/api"
 	"go-api/server/graphs"
 	"log"
 	"net/http"
@@ -13,16 +12,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func ReadQuery() (api.QueryForm, error) {
-	var query api.QueryForm
-	bytes, err := os.ReadFile("query.json")
+func ReadQuery() (graphs.GroupedBarRequest, error) {
+	var query graphs.GroupedBarRequest
+	data, err := os.ReadFile("query.json")
 	if err != nil {
 		return query, err
 	}
 
-	json.Unmarshal(bytes, &query.Global_Filters)
-	json.Unmarshal(bytes, &query.Data_Params)
-	json.Unmarshal(bytes, &query.Graph_Params)
+	json.Unmarshal(data, &query)
 
 	return query, nil
 }
