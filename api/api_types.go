@@ -12,8 +12,9 @@ type ListStatsResponse struct {
 
 type ListStatsFilter struct {
 	//			  arg    : clause
-	Filters            ArgClauseMap
+	Filters_IS         ArgClauseMap
+	Filters_NOT        ArgClauseMap
 	MinimumDatasetSize int
 	Query              string
-	Target             string
+	Target             string `json:"target"`
 }

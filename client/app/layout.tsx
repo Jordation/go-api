@@ -1,6 +1,6 @@
 
 import "./global.css"
-
+import Link from 'next/link';
 
 export const metadata = {
   title: 'graphs mate',
@@ -17,7 +17,13 @@ export default function RootLayout({
       <body className="main">
         
         <div className="leftBar">left side bar</div>
-        <div className="header">header</div>
+        <div className="header">
+          
+          <Link href={"/charts/groupedbar"}> grouped bar</Link>
+          <Link href={"/charts"}> charts</Link>
+          <Link href={"/"}> home</Link>
+          header
+        </div>
         <div className="mainContent">{children}</div>
         <div className="rightBar">right side bar</div>
     

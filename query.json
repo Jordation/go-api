@@ -6,7 +6,13 @@
         "teams": "",
         "side": "C"
     },
-    "x_target": "mapname",
+    "filters_NOT": {
+        "agents": "",
+        "mapnames": "",
+        "players": "",
+        "teams": ""
+    },
+    "x_target": "map_name",
     "x_groups_target": "agent",
     "y_target": "kills",
     "min_dataset_size": "5",

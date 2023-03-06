@@ -44,9 +44,18 @@ func MakeQuery(f api.ListStatsFilter) (string, []interface{}) {
 		f.Query = strings.Replace(f.Query, "?", f.Target, 1)
 	}
 
-	for filter, filterVals := range f.Filters {
+	for filter, filterVals := range f.Filters_IS {
 		if filterVals != nil {
 			clauses = append(clauses, filter+" IN ("+strings.Repeat("?,", len(filterVals)-1)+"?)")
+			for _, vals := range filterVals {
+				args = append(args, vals)
+			}
+		}
+	}
+
+	for filter, filterVals := range f.Filters_NOT {
+		if filterVals != nil {
+			clauses = append(clauses, filter+" NOT IN ("+strings.Repeat("?,", len(filterVals)-1)+"?)")
 			for _, vals := range filterVals {
 				args = append(args, vals)
 			}
@@ -60,8 +69,8 @@ func MakeQuery(f api.ListStatsFilter) (string, []interface{}) {
 	if f.MinimumDatasetSize != 0 {
 		args = append(args, f.MinimumDatasetSize)
 		var gs []string
-		if len(f.Filters) == 2 {
-			for k := range f.Filters {
+		if len(f.Filters_IS) == 2 {
+			for k := range f.Filters_IS {
 				gs = append(gs, k)
 			}
 		}

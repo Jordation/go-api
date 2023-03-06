@@ -1,5 +1,5 @@
 "use client"
-import {use, useState} from 'react';
+import {use, useEffect, useState} from 'react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -9,24 +9,38 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
+ChartJS.register(CategoryScale,LinearScale,BarElement,Title,Tooltip,Legend);
 import { Bar } from 'react-chartjs-2';
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend
-    );
-    
+import { useSearchParams } from 'next/navigation';
 
 
-export default function GroupedBarGraph( {data, options}: any ) {
+export default function GroupedBarGraph() {
+    const SearchParams = useSearchParams();
+    const [Data, setData] = useState({})
 
-    //fetch("http://localhost:8000/testing", {method: "POST", body: JSON.stringify({})})
+    useEffect(() => {
+        console.log(SearchParams)
+    }, [SearchParams]);
+
     return (
             <div className='graphArea'>
-                <Bar options={options} data={data} />
+                {SearchParams && SearchParams}
             </div>
     )
 }
+
+
+
+// <button onClick={() => {
+//     const params = Object.fromEntries(SearchParams.entries());
+//     let newo = {filters:{}, filters_NOT:{}}
+//     for(const [key, value] of Object.entries(params)) {
+//         if (key.includes(".")) {
+//             let frags = key.split(".")
+//             newo[frags[0]][frags[1]] = value
+//         } else {
+//             newo[key] = value
+//         }
+//     }
+//     console.log("fixed object", newo)
+// }}>clickethme to show data</button>

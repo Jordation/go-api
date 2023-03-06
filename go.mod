@@ -11,6 +11,7 @@ require (
 	github.com/gocolly/colly v1.2.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
+	github.com/rs/cors v1.8.3
 )
 
 require (

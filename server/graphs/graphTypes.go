@@ -31,7 +31,8 @@ type GlobalFilters struct {
 	Side     string `json:"side"`
 }
 type GroupedBarRequest struct {
-	Filters          *GlobalFilters `json:"filters"`
+	Filters_IS       *GlobalFilters `json:"filters"`
+	Filters_NOT      *GlobalFilters `json:"filters_NOT"`
 	XTarget          string         `json:"x_target"`
 	XGroupsTarget    string         `json:"x_groups_target"`
 	YTarget          string         `json:"y_target"`
