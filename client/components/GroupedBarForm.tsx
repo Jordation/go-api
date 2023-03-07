@@ -1,54 +1,51 @@
 "use client"
 import {useForm} from "react-hook-form"
 import { useRouter } from 'next/navigation';
-import MultiDropdown from "./MultiDropdown";
-import { ListUniqueStats } from "@/utils/getStats";
-
-export default function GroupedBarForm({ formData }:object){
+import SelectFormItem from "./MultiDropdown";
+import { FormProps } from "./FormContainer";
+import { GroupedBarGraph } from "./GroupedBarGraph";
+import { useState } from "react";
+export const GroupedBarForm = ({props}: {props: FormProps}) => {
   
-    const {register, handleSubmit} = useForm()
-    const router = useRouter();
-
-    // converts form output to query params
-    const onSubmit = (data:any) => {
-        console.log("data ", data)
-        let url = new URL("http://localhost:3000/charts/groupedbar");
-        let params = new URLSearchParams();
-        for (const [key, value] of Object.entries(data)) {
-            console.log(typeof value)
-            if (!Array.isArray(value)) {
-                for (const [key2, value2] of Object.entries(value)) {
-                    params.append(key+"."+key2, value2)
-                }
-            } else {
-                params.append(key, value)
-            }
-        url.search = params.toString();
-        router.push(url.toString())
-    }
-    }
+    const {register, handleSubmit, reset} = useForm()
+    const [ChartData, setChartData] = useState("")
     
-    const resetButtonClick = (data:any) => router.push("http://localhost:3000/charts/groupedbar")
+    const onSubmit = (data:any) => {
+        console.log("Sending request with params: ", data)
+        const res = fetch("http://localhost:8000/graphs/groupedBar", {
+            method: "POST",
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {setChartData(data)})
+        .catch(err => console.log(err))
+    }
+
+    const resetButtonClick = () => reset()
 
     return(
         <>
         <div className="formArea">
             form zoneature
             <form id="form" onSubmit={handleSubmit(onSubmit)}>
-                <MultiDropdown register={register} field={"filters.players"} list={formData.players}/>
-                <MultiDropdown register={register} field={"filters.teams"} list={formData.teams}/>
-                <MultiDropdown register={register} field={"filters.agents"} list={formData.agents}/>
-                <MultiDropdown register={register} field={"filters.mapnames"} list={formData.maps}/>
+                <SelectFormItem register={register} field={"filters.players"} list={props.players} multiple={true}/>
+                <SelectFormItem register={register} field={"filters.teams"} list={props.teams} multiple={true}/>
+                <SelectFormItem register={register} field={"filters.agents"} list={props.agents} multiple={true}/>
+                <SelectFormItem register={register} field={"filters.mapnames"} list={props.maps} multiple={true}/>
                 <br/>
-                <MultiDropdown register={register} field={"filters_NOT.players"} list={formData.players}/>
-                <MultiDropdown register={register} field={"filters_NOT.teams"} list={formData.teams}/>
-                <MultiDropdown register={register} field={"filters_NOT.agents"} list={formData.agents}/>
-                <MultiDropdown register={register} field={"filters_NOT.mapnames"} list={formData.maps}/>
+                <SelectFormItem register={register} field={"x_target"} list={props.x_values} multiple={false}/>
+                <SelectFormItem register={register} field={"x_groups_target"} list={props.x_values} multiple={false}/>
+                <SelectFormItem register={register} field={"y_target"} list={props.y_values} multiple={false}/>
+                <br/>
+                <input type="number" {...register("min_dataset_size")}/>
+                <input type="number" {...register("max_dataset_amount")}/>
+                <input type="text" {...register("average_results")}/>
             </form>
             <button form="form">submit</button>
+            
             <button onClick={resetButtonClick}>reset</button>
         </div>
-
+        <GroupedBarGraph data={ChartData} />
         </>
     )
 }

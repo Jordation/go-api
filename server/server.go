@@ -33,7 +33,12 @@ func ReadQuery() (graphs.GroupedBarRequest, error) {
 }
 
 func getGroupedBarData(w http.ResponseWriter, r *http.Request) {
+	var query graphs.GroupedBarRequest
+	json.NewDecoder(r.Body).Decode(&query)
+	query.AverageResults = true
 
+	data := graphs.ProcessGroupedBarQuery(query)
+	fmt.Println(data)
 }
 
 func HandleListUniqueStatsRequest(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +59,7 @@ func StartServer(wg *sync.WaitGroup) {
 
 	r := mux.NewRouter()
 	c := cors.Default()
-	r.HandleFunc("/graphs/groupedBar", getGroupedBarData).Methods("GET")
+	r.HandleFunc("/graphs/groupedBar", getGroupedBarData).Methods("POST")
 	r.HandleFunc("/ListUniqueStats/{target}", HandleListUniqueStatsRequest).Methods("GET")
 	fmt.Println("Starting server on port 8000")
 	if err := http.ListenAndServe(":8000", c.Handler(r)); err != nil {
