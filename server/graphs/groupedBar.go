@@ -1,6 +1,7 @@
 package graphs
 
 import (
+	"fmt"
 	"go-api/api"
 	"go-api/api/stats"
 	"go-api/orm"
@@ -63,7 +64,7 @@ func groupIterate(g1 []string, g2 []string, iq string, q GroupedBarRequest) (res
 	res.Data = make(map[string][]float64)
 
 	for _, v := range g1 {
-		res.Groups = append(res.Groups, v)
+		res.Labels = append(res.Labels, v)
 		for _, v2 := range g2 {
 			f := api.ListStatsFilter{
 				Query:              query,
@@ -79,8 +80,9 @@ func groupIterate(g1 []string, g2 []string, iq string, q GroupedBarRequest) (res
 	return res
 }
 func getGroupPreReqs(q GroupedBarRequest) ([]string, []string, string) {
-	f_i := MapQueryFilters(q.Filters_IS)
-	f_n := MapQueryFilters(q.Filters_NOT)
+	fmt.Println(q.Filters_IS)
+	f_i := *MapQueryFilters(q.Filters_IS)
+	f_n := *MapQueryFilters(q.Filters_NOT)
 	f1 := api.ListStatsFilter{
 		Query:       orm.GetStatQueries()["listDistinct"],
 		Filters_IS:  f_i,
@@ -109,7 +111,7 @@ func getGroupPreReqs(q GroupedBarRequest) ([]string, []string, string) {
 func ProcessGroupedBarQuery(q GroupedBarRequest) (res GroupedBarResponse) {
 
 	g1, g2, innerQuery := getGroupPreReqs(q)
-
+	fmt.Println(g1, g2, innerQuery)
 	res = groupIterate(g1, g2, innerQuery, q)
 
 	res.Data = finalizeGroups(res.Data, g1)

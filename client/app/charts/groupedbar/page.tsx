@@ -7,7 +7,6 @@ export default async function Page(){
     return(
         <>
         <FormContainer child={GroupedBarForm}/>
-        <GroupedBarGraph/>
         </>
     )
 }

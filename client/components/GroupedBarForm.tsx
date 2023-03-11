@@ -5,10 +5,11 @@ import SelectFormItem from "./MultiDropdown";
 import { FormProps } from "./FormContainer";
 import { GroupedBarGraph } from "./GroupedBarGraph";
 import { useState } from "react";
+import { GroupedBarProps } from "./GroupedBarGraph";
 export const GroupedBarForm = ({props}: {props: FormProps}) => {
   
     const {register, handleSubmit, reset} = useForm()
-    const [ChartData, setChartData] = useState("")
+    const [ChartData, setChartData] = useState<GroupedBarProps>({} as GroupedBarProps)
     
     const onSubmit = (data:any) => {
         console.log("Sending request with params: ", data)
@@ -32,6 +33,7 @@ export const GroupedBarForm = ({props}: {props: FormProps}) => {
                 <SelectFormItem register={register} field={"filters.teams"} list={props.teams} multiple={true}/>
                 <SelectFormItem register={register} field={"filters.agents"} list={props.agents} multiple={true}/>
                 <SelectFormItem register={register} field={"filters.mapnames"} list={props.maps} multiple={true}/>
+                <input type="text" {...register("filters.side")}/>
                 <br/>
                 <SelectFormItem register={register} field={"x_target"} list={props.x_values} multiple={false}/>
                 <SelectFormItem register={register} field={"x_groups_target"} list={props.x_values} multiple={false}/>
@@ -45,7 +47,7 @@ export const GroupedBarForm = ({props}: {props: FormProps}) => {
             
             <button onClick={resetButtonClick}>reset</button>
         </div>
-        <GroupedBarGraph data={ChartData} />
+        <GroupedBarGraph Data={ChartData.Data} Labels={ChartData.Labels}/>
         </>
     )
 }

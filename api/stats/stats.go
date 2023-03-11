@@ -45,7 +45,7 @@ func MakeQuery(f api.ListStatsFilter) (string, []interface{}) {
 	}
 
 	for filter, filterVals := range f.Filters_IS {
-		if filterVals != nil {
+		if len(filterVals) != 0 {
 			clauses = append(clauses, filter+" IN ("+strings.Repeat("?,", len(filterVals)-1)+"?)")
 			for _, vals := range filterVals {
 				args = append(args, vals)
@@ -54,7 +54,7 @@ func MakeQuery(f api.ListStatsFilter) (string, []interface{}) {
 	}
 
 	for filter, filterVals := range f.Filters_NOT {
-		if filterVals != nil {
+		if len(filterVals) != 0 {
 			clauses = append(clauses, filter+" NOT IN ("+strings.Repeat("?,", len(filterVals)-1)+"?)")
 			for _, vals := range filterVals {
 				args = append(args, vals)
@@ -106,7 +106,7 @@ func ListAverageStat(f api.ListStatsFilter) (res float64) {
 	return toFixed(res, 2)
 }
 
-func ListStats(f api.ListStatsFilter) (res api.ListStatsResponse) {
+func ListStats(f api.ListStatsFilter) (res api.ListStatsResponse2) {
 	query, args := MakeQuery(f)
 
 	db, err := orm.GetDB()

@@ -1,15 +1,25 @@
 export const DefaultBarOptions = {
     plugins: {
+        tooltip: {
+            filter: function(tooltipItem) {
+                if(tooltipItem.parsed.y == null){
+                    return false
+                } else {
+                    return true
+                }
+            }
+        },
         title: {
             display: true,
             text: 'Chart.js Bar Chart - Stacked',
         },
     },
-    responsive: true,
     interaction: {
         mode: 'index' as const,
         intersect: false,
     },
+    responsive: true,
+    skipNull: true
 }
 
 let titles = ["Animal Types", "Countries", "Music", "Beverages", "Cars", "Hobbies", "Languages", "Flowers", "Colours"]

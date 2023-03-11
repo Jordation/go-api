@@ -1,24 +1,25 @@
 package graphs
 
 // helper bc i dont want to work on my frontend any more
-func MapQueryFilters(f GlobalFilters) map[string][]string {
-	filters := make(map[string][]string)
-	filters["agent"] = f.Agents
-	filters["map_name"] = f.Mapnames
-	filters["team"] = f.Teams
-	filters["player_name"] = f.Players
-	filters["side"] = []string{f.Side}
+func MapQueryFilters(f GlobalFilters) *map[string][]string {
+	side := []string{f.Side}
+	filters := map[string][]string{
+		"agent":       f.Agents,
+		"map_name":    f.Mapnames,
+		"team":        f.Teams,
+		"player_name": f.Players,
+		"side":        side,
+	}
 	for k, v := range filters {
-		if v != nil {
+		if v == nil {
 			filters[k] = nil
 		}
 	}
-	return filters
-
+	return &filters
 }
 
 type GroupedBarResponse struct {
-	Groups []string
+	Labels []string
 	Data   map[string][]float64
 }
 type GlobalFilters struct {
