@@ -52,6 +52,25 @@ type Player struct {
 	FD         uint64
 	Side       string
 }
+type Stat struct {
+	ID         uint64
+	MapID      uint64
+	PlayerName string
+	Team       string
+	MapName    string
+	Agent      string
+	Rating     float64
+	ACS        uint64
+	Kills      uint64
+	Deaths     uint64
+	Assists    uint64
+	KAST       uint64
+	ADR        uint64
+	HSP        uint64
+	FK         uint64
+	FD         uint64
+	Side       string
+}
 
 func GetDB() (*gorm.DB, error) {
 	return gorm.Open(sqlite.Open("dev.db"), &gorm.Config{})
@@ -62,7 +81,9 @@ func MigrateDB() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&Event{}, &Map{}, &Player{}, &HitLink{})
+	db.Migrator().RenameColumn(&Stat{}, "Player", "player")
+	db.Migrator().RenameColumn(&Stat{}, "Map", "map")
+	db.AutoMigrate(&Event{}, &Map{}, &Stat{}, &HitLink{})
 }
 
 func CheckPlayerRow(r Player) bool {

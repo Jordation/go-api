@@ -8,6 +8,9 @@ export default function GroupedBarLayout({
   return (
       <>
         {children}
+        <br/>
+        <br/>
+        <br/>
         <Link href={"charts/groupedbar"}>to grouped bar </Link>
         <Link href={"charts/"}>to blah</Link>
       </> 

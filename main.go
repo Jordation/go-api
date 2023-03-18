@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	_ "go-api/api"
-	_ "go-api/orm"
 	"go-api/server"
 	_ "go-api/server/scraper"
 	_ "os"
@@ -14,6 +13,7 @@ import (
 
 func main() {
 	var wg sync.WaitGroup
+
 	//q, err := server.ReadQuery()
 	//if err != nil {
 	//	log.Println(err)

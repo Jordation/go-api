@@ -25,7 +25,7 @@ export default function RowResults(props: RowResultsProps){
 
     const rows = props.Rows.map((row) => {
         let vals = Object.values(row).map((value, i) => {
-            return <div key={i+value}>{value}</div>
+            return value + " "
         })
         return <div className="rowResult" key={JSON.stringify(row)}>{vals}</div>})
 
