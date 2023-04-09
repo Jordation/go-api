@@ -1,9 +1,8 @@
-import { ReactNode } from "react"
+import React from "react"
 
 async function getUniqueStatLists(target: string){
     const res = await fetch(`http://localhost:8000/ListUniqueStats/${target}`, {
-        method: "GET",})
-        console.log("i did a fetch for: ", target)
+        method: "GET"})
     return res.json()
 }
 
@@ -16,19 +15,19 @@ export interface FormProps {
         y_values: string[],
 }
 interface FormContainerProps {
-    child: ReactNode
+    child: React.ReactElement
 }
 
 export default async function FormContainer(props: FormContainerProps){
 
-    const playerList = await getUniqueStatLists("player_name")
+    const playerList = await getUniqueStatLists("player")
     const teamList = await getUniqueStatLists("team")
     const agentList = await getUniqueStatLists("agent")
-    const mapList = await getUniqueStatLists("map_name")
-    const x_values = ["player_name", "team", "agent", "map_name"]
+    const mapList = await getUniqueStatLists("map")
+    const x_values = ["player", "team", "agent", "map"]
     const y_values = ["kills", "deaths", "assists", "rating", "kda", "adr", "kast", "hsp"]
 
-    const [players, teams, agents, maps] = await Promise.all([playerList.data, teamList.data, agentList.data, mapList.data]) 
+    const [players, teams, agents, maps] = await Promise.all([playerList, teamList, agentList, mapList]) 
     
     const lists = {players, teams, agents, maps, x_values, y_values}
     

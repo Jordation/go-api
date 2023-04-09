@@ -11,8 +11,8 @@ export default function GroupedBarLayout({
         <br/>
         <br/>
         <br/>
-        <Link href={"charts/groupedbar"}>to grouped bar </Link>
-        <Link href={"charts/"}>to blah</Link>
+        <Link href={"charts/groupedbar"}> to grouped bar </Link>
+        <Link href={"charts/"}> to blah </Link>
       </> 
   )
 }

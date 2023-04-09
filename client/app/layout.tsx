@@ -19,6 +19,7 @@ export default function RootLayout({
         <div className="leftBar">left side bar</div>
         <div className="header">
           
+          <Link href={"charts/bubble"}> to bubble </Link>
           <Link href={"/charts/groupedbar"}> grouped bar </Link>
           <Link href={"/charts"}> charts </Link>
           <Link href={"/stats"}> stats </Link>
