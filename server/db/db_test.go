@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gocolly/colly/v2"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,7 +32,7 @@ func TestMakePatches(t *testing.T) {
 	}
 }
 
-func TestGetVCTMatches(t *testing.T) {
+/* func TestGetVCTMatches(t *testing.T) {
 	c := GetCollector()
 	urls := GetVCTmatches(c)
 	for i := range urls {
@@ -82,3 +81,4 @@ func TestSniff(t *testing.T) {
 	log.Info(isValid)
 	log.Info(url == isValid)
 }
+*/

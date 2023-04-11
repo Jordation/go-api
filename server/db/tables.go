@@ -49,6 +49,29 @@ type Event struct {
 	Maps      []Map
 }
 
+func (s *PlayerStat) LoadValues(Player, Agent, Team, Map, Side string, IntStats []uint, Rating float64) {
+	s.Player = Player
+	s.Agent = Agent
+	s.Team = Team
+	s.Map = Map
+	s.Side = Side
+	s.Rating = Rating
+	s.ACS = IntStats[0]
+	s.Kills = IntStats[1]
+	s.Deaths = IntStats[2]
+	s.Assists = IntStats[3]
+	s.KAST = IntStats[4]
+	s.ADR = IntStats[5]
+	s.HSP = IntStats[6]
+	s.FK = IntStats[7]
+	s.FD = IntStats[8]
+}
+
+func (m *Map) LinkChildren(Players []PlayerStat, Comps []AgentComp) {
+	m.Players = Players
+	m.Comps = Comps
+}
+
 type Map struct {
 	ID         uint
 	EventID    uint
