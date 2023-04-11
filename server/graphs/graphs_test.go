@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"refactor/helpers"
 	"testing"
 	"time"
+
+	"github.com/Jordation/go-api/server/helpers"
 
 	log "github.com/sirupsen/logrus"
 )
