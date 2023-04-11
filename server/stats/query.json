@@ -1,0 +1,15 @@
+{
+    "IS_filters": {
+        "agents": [],
+        "maps": ["Icebox", "Bind", "Ascent", "Haven", "Breeze"],
+        "players": [],
+        "teams": []
+    },
+    "NOT_filters": {
+        "agents": ["Jett"],
+        "maps": [],
+        "players": ["Asuna", "TenZ"],
+        "teams": []
+    },    
+    "side": "C"
+}

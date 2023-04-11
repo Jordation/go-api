@@ -1,0 +1,21 @@
+{
+    "IS_filters": {
+        "agents": ["Jett", "Raze", "Chamber", "Sova", "Astra", "Killjoy"],
+        "maps": [],
+        "players": [],
+        "teams": [] 
+    },
+    "NOT_filters": {
+        "agents": [],
+        "maps": [],
+        "players": [],
+        "teams": []
+    },    
+    "side": "C",
+    "x_target": "agent",
+    "x_groups_target": "player",
+    "y_target": "acs",
+    "min_dataset_size": "15",
+    "max_dataset_amount": "10",
+    "average_results": "true"
+}

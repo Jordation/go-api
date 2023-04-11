@@ -1,0 +1,21 @@
+{
+    "IS_filters": {
+        "agents": [],
+        "maps": [],
+        "teams": [] 
+    },
+    "NOT_filters": {
+        "agents": ["Phoenix", "Yoru", "Brimstone"],
+        "maps": [],
+        "teams": []
+    },
+    "Range": {
+        "Patches": [],
+        "Dates": []
+    },
+    "y_target": "pickrate",
+    "r_target": "winrate",
+    "min_dataset_size": "5",
+    "date_splits": "15",
+    "max_results": "5"
+}

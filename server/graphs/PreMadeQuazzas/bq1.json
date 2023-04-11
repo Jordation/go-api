@@ -1,0 +1,21 @@
+{
+    "IS_filters": {
+        "agents": [],
+        "maps": [],
+        "players": [],
+        "teams": [] 
+    },
+    "NOT_filters": {
+        "agents": [],
+        "maps": [],
+        "players": [],
+        "teams": []
+    },    
+    "side": "C",
+    "x_target": "map",
+    "x_groups_target": "agent",
+    "y_target": "rating",
+    "min_dataset_size": "15",
+    "max_dataset_amount": "5",
+    "average_results": "true"
+}

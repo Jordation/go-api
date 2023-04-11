@@ -1,0 +1,21 @@
+{
+    "IS_filters": {
+        "agents": [],
+        "maps": [],
+        "players": [],
+        "teams": ["100 Thieves", "G2 Esports", "Rise", "XSET", "Envy", "FaZe Clan", "NRG Esports"] 
+    },
+    "NOT_filters": {
+        "agents": ["Yoru", "Phoenix"],
+        "maps": ["Split"],
+        "players": ["Asuna", "Hiko"],
+        "teams": ["Cloud9", "Sentinels"]
+    },    
+    "side": "C",
+    "x_target": "agent",
+    "x_groups_target": "player",
+    "y_target": "rating",
+    "min_dataset_size": "5",
+    "max_dataset_amount": "4",
+    "average_results": "true"
+}

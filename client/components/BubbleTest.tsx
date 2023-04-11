@@ -30,10 +30,10 @@ function mapResults(inData) {
       borderColor: result.borderColor,
       borderWidth: 1,
       pointRadius: function(context) {
-        return context.dataset.data[context.dataIndex].r;
+        return context.dataset.data[context.dataIndex].r/2;
       },
       pointHoverRadius: function(context) {
-        return context.dataset.data[context.dataIndex].r * 1.5;
+        return context.dataset.data[context.dataIndex].r;
       }
     }));
     console.log(res)
