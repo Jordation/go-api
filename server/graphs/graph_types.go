@@ -3,9 +3,10 @@ package graphs
 import (
 	"encoding/json"
 	"fmt"
-	"refactor/db"
-	"refactor/stats"
 	"time"
+
+	"github.com/Jordation/go-api/server/db"
+	"github.com/Jordation/go-api/server/stats"
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"

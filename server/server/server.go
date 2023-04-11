@@ -6,12 +6,12 @@ import (
 	"os"
 	"time"
 
-	"refactor/db"
-	"refactor/graphs"
-	"refactor/helpers"
-	"refactor/stats"
+	"github.com/Jordation/go-api/server/db"
+	"github.com/Jordation/go-api/server/graphs"
+	"github.com/Jordation/go-api/server/helpers"
+	"github.com/Jordation/go-api/server/stats"
 
-	"refactor/ports"
+	"github.com/Jordation/go-api/server/ports"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"

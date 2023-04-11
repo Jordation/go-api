@@ -2,9 +2,10 @@ package stats
 
 import (
 	"fmt"
-	"refactor/db"
 	"strings"
 	"time"
+
+	"github.com/Jordation/go-api/server/db"
 
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"

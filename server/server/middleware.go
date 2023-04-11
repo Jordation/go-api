@@ -2,7 +2,8 @@ package server
 
 import (
 	"net/http"
-	"refactor/db"
+
+	"github.com/Jordation/go-api/server/db"
 
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"

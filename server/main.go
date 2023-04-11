@@ -7,9 +7,10 @@ import (
 
 	"os"
 	"os/signal"
-	"refactor/db"
-	"refactor/server"
 	"time"
+
+	"github.com/Jordation/go-api/server/db"
+	"github.com/Jordation/go-api/server/server"
 
 	log "github.com/sirupsen/logrus"
 )

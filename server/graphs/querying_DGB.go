@@ -6,10 +6,11 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"refactor/db"
-	"refactor/stats"
 	"runtime"
 	"sort"
+
+	"github.com/Jordation/go-api/server/db"
+	"github.com/Jordation/go-api/server/stats"
 
 	"github.com/jinzhu/copier"
 	log "github.com/sirupsen/logrus"

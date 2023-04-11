@@ -1,10 +1,11 @@
 package graphs
 
 import (
-	"refactor/db"
-	"refactor/helpers"
-	"refactor/stats"
 	"sync"
+
+	"github.com/Jordation/go-api/server/db"
+	"github.com/Jordation/go-api/server/helpers"
+	"github.com/Jordation/go-api/server/stats"
 )
 
 // server concurrency...
