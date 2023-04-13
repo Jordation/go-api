@@ -10,12 +10,12 @@ import (
 	"github.com/Jordation/go-api/server/graphs"
 	"github.com/Jordation/go-api/server/helpers"
 	"github.com/Jordation/go-api/server/stats"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Jordation/go-api/server/ports"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"github.com/sirupsen/logrus"
 )
 
 type Application struct {
@@ -48,13 +48,14 @@ func handlePremadeDgbReq(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(res)
 	} else {
-		logrus.Error("No query number provided")
+		log.Error("No query number provided")
 	}
 }
 func handlePremadeTsrReq(w http.ResponseWriter, r *http.Request) {
 	qnum, ok := mux.Vars(r)["id"]
 	if ok {
 		file := helpers.GetQueryDir() + "TsrReq" + qnum + ".json"
+		log.Info("[PRE-MADE TSR]: ", file)
 		data, err := os.ReadFile(file)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -67,7 +68,7 @@ func handlePremadeTsrReq(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(res)
 	} else {
-		logrus.Error("No query number provided")
+		log.Error("No query number provided")
 	}
 }
 

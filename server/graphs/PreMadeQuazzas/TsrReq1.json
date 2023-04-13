@@ -13,9 +13,7 @@
         "Patches": [],
         "Dates": []
     },
-    "y_target": "pickrate",
-    "r_target": "winrate",
-    "min_dataset_size": "5",
-    "date_splits": "15",
-    "max_results": "5"
+    "date_splits": "24",
+    "min_dataset_size": "10",
+    "max_results": "25"
 }

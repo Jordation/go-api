@@ -13,5 +13,5 @@ func GetPercent(part, whole float64) float64 {
 }
 
 func GetQueryDir() string {
-	return `C:\DEV\refactor\graphs\PreMadeQuazzas\`
+	return `C:\DEV\go-api\server\graphs\PreMadeQuazzas\`
 }

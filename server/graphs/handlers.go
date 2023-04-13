@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 )
 
 type Request interface{}
@@ -58,6 +59,7 @@ func StartTimescaleResponse(req *TsrRequest) (*TsrResponse, error) {
 	if err := req.SearchRange.ParseInputs(); err != nil {
 		return nil, err
 	}
+	log.Info("[TSR REQUEST]: ", req)
 	res, err := GetTsrQueries(req)
 	if err != nil {
 		return nil, err

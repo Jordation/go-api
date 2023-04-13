@@ -100,8 +100,8 @@ type TsrRequest struct {
 	Y_Target       string             `json:"y_target"`
 	Radius_Scale   string             `json:"r_target"`
 	MinDatasetSize int                `json:"min_dataset_size,string"`
-	DateSplits     int                `json:"date_splits,string"`
 	MaxResults     int                `json:"max_results,string"`
+	DateSplits     int                `json:"date_splits,string"`
 	RequestID      uuid.UUID
 }
 

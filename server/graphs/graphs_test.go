@@ -16,7 +16,7 @@ import (
 
 func TestGetTimeScaleGraph(t *testing.T) {
 	var q TsrRequest
-	fpath := helpers.GetQueryDir() + "\\TsrReq1.json"
+	fpath := helpers.GetQueryDir() + "TsrReq1.json"
 
 	data, err := os.ReadFile(fpath)
 	if err != nil {

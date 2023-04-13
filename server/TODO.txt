@@ -1,9 +1,9 @@
 TODO: 
 [] implement comp rating calcs -> max datasets
-[] get more data
 [] design map query form
 
 DONE:
+[X] get more data
 [X] adjust how date groupings are made
 [X] implement map filters
 [X] v1 tsr 

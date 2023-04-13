@@ -1,11 +1,13 @@
 package graphs
 
 import (
+	"sort"
 	"time"
 
 	"github.com/Jordation/go-api/server/db"
 	"github.com/Jordation/go-api/server/helpers"
 	"github.com/Jordation/go-api/server/stats"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/jinzhu/copier"
 )
@@ -31,6 +33,16 @@ import (
      },
    }, */
 
+type tsrValue struct {
+	comp  string
+	value float64
+}
+
+// loop through map
+// insert values to slice of tsrValue
+// sort slice of tsrValue
+// return top n
+
 func makeTsrDatasets(src map[string][]TsrDataPoint, dest *TsrResponse) {
 	for k, v := range src {
 		col := randColor()
@@ -51,8 +63,32 @@ func GetTotalPicks(group []stats.CompStats) (res int64) {
 	return res
 }
 
-func ProcessCompGroups(compGroups [][]stats.CompStats, dateGroups [][]string) map[string][]TsrDataPoint {
-	res := make(map[string][]TsrDataPoint, 0)
+func EvaluateDatasetWorth(betadata *map[string][]TsrDataPoint, maxResults int) []tsrValue {
+	sortedData := make([]tsrValue, 0)
+	for comp, data := range *betadata {
+		score := 0.0
+		for _, v := range data {
+			score += (v.R * (v.Y * 2)) / 100
+		}
+		sortedData = append(sortedData, tsrValue{
+			comp:  comp,
+			value: score,
+		})
+	}
+	sort.Slice(sortedData, func(i, j int) bool {
+		return sortedData[i].value > sortedData[j].value
+	})
+	if maxResults > len(sortedData) {
+		return sortedData
+	}
+	return sortedData[:maxResults]
+}
+func ProcessCompGroups(compGroups [][]stats.CompStats, dateGroups [][]string, maxResults int) map[string][]TsrDataPoint {
+	var (
+		unsorted_data = make(map[string][]TsrDataPoint, 0)
+		final_data    = make(map[string][]TsrDataPoint, 0)
+	)
+
 	for i, v := range compGroups {
 		total := GetTotalPicks(v)
 		for _, v2 := range v {
@@ -63,14 +99,19 @@ func ProcessCompGroups(compGroups [][]stats.CompStats, dateGroups [][]string) ma
 			pr := helpers.GetPercent(float64(v2.Total()), float64(total))
 			date := dateGroups[i][0]
 
-			res[v2.Comp] = append(res[v2.Comp], TsrDataPoint{
+			unsorted_data[v2.Comp] = append(unsorted_data[v2.Comp], TsrDataPoint{
 				X: date,
-				Y: pr,
-				R: wr,
+				Y: wr,
+				R: pr,
 			})
 		}
 	}
-	return res
+	sortedData := EvaluateDatasetWorth(&unsorted_data, maxResults)
+	for _, dataset := range sortedData {
+		final_data[dataset.comp] = unsorted_data[dataset.comp]
+	}
+
+	return final_data
 }
 
 func GetCompGroups(groups *[][]uint, compReq *stats.ListCompsRequest) ([][]stats.CompStats, error) {
@@ -88,6 +129,7 @@ func GetCompGroups(groups *[][]uint, compReq *stats.ListCompsRequest) ([][]stats
 	return compGroups, nil
 }
 func SplitTimes(divisions int, start, end time.Time) (res [][]string) {
+	log.Info(divisions, start, end)
 	var (
 		duration = end.Sub(start)
 		interval = duration / time.Duration(divisions)
@@ -135,6 +177,7 @@ func GetTsrQueries(req *TsrRequest) (*TsrResponse, error) {
 	var (
 		MapReq  stats.ListMapsRequest
 		CompReq stats.ListCompsRequest
+		res     = TsrResponse{Datasets: make([]TsrResDataset, 0)}
 	)
 	copier.Copy(&MapReq, req)
 	copier.Copy(&CompReq, req)
@@ -151,11 +194,8 @@ func GetTsrQueries(req *TsrRequest) (*TsrResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	datasets := ProcessCompGroups(compGroups, ranges)
+	datasets := ProcessCompGroups(compGroups, ranges, req.MaxResults)
 
-	res := TsrResponse{
-		Datasets: make([]TsrResDataset, 0),
-	}
 	makeTsrDatasets(datasets, &res)
 	return &res, nil
 }
