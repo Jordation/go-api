@@ -18,6 +18,7 @@ ChartJS.register(
   );
 
 
+  const e = 2.71828
 function mapResults(inData) {
     const res = inData.datasets.map(result => ({
       label: result.label,
@@ -30,7 +31,8 @@ function mapResults(inData) {
       borderColor: result.borderColor,
       borderWidth: 1,
       pointRadius: function(context) {
-        return context.dataset.data[context.dataIndex].r*0.4;
+        let rad =context.dataset.data[context.dataIndex].r;
+        return 10 + ((1 / (1 + e**(-0.1 * (rad - 50)))) * 70)
       },
       pointHoverRadius: function(context) {
         return context.dataset.data[context.dataIndex].r*0.75;
@@ -49,8 +51,8 @@ const options = {
       },
     },
     y: {
-      suggestedMin: 0,
-      suggestedMax: 100,
+      suggestedMin: 40,
+      suggestedMax: 70,
     },
   },
 };

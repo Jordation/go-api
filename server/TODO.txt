@@ -1,6 +1,8 @@
 TODO: 
 [] implement comp rating calcs -> max datasets
 [] design map query form
+    [] multiple ways to map the data, group comps by map, team, etc  
+[] map of user options and which param they relate to so i can do the calculations on overall score
 
 DONE:
 [X] get more data

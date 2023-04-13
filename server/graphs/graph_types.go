@@ -34,6 +34,11 @@ func (a *AvgResultStr) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type TsrScores struct {
+	wrAvg    float64
+	prAvg    float64
+	maxPicks int64
+}
 type TsrResponse struct {
 	Datasets []TsrResDataset `json:"datasets"`
 }
@@ -45,9 +50,10 @@ type TsrResDataset struct {
 	BorderCol string         `json:"borderColor"`
 }
 type TsrDataPoint struct {
-	X string  `json:"x"`
-	Y float64 `json:"y"`
-	R float64 `json:"r"`
+	X     string  `json:"x"`
+	Y     float64 `json:"y"`
+	R     float64 `json:"r"`
+	Picks int64
 }
 
 func (t *TimeRange) ParseInputs() error {

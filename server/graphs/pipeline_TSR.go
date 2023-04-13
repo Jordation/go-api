@@ -12,36 +12,16 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-/* datasets: [
-   {
-
-     label: 'COMP NAME',
-     data: [
-       { x: new Date('2022-01-01'), y: 23, r: 10 },
-       { x: new Date('2022-02-02'), y: 40, r: 120 },
-       { x: new Date('2022-03-03'), y: 60, r: 30 },
-       { x: new Date('2022-04-04'), y: 10, r: 55 },
-     ],
-     backgroundColor: 'rgba(255, 99, 132, 0.2)',
-     borderColor: 'rgba(255, 99, 132, 1)',
-     borderWidth: 1,
-     pointRadius: function(context) {
-       return context.dataset.data[context.dataIndex].r;
-     },
-     pointHoverRadius: function(context) {
-       return context.dataset.data[context.dataIndex].r * 1.5;
-     },
-   }, */
+const (
+	PR_MULTI  = 0.4
+	WR_MULTI  = 0.4
+	APP_MULTI = 0.2
+)
 
 type tsrValue struct {
 	comp  string
 	value float64
 }
-
-// loop through map
-// insert values to slice of tsrValue
-// sort slice of tsrValue
-// return top n
 
 func makeTsrDatasets(src map[string][]TsrDataPoint, dest *TsrResponse) {
 	for k, v := range src {
@@ -63,16 +43,27 @@ func GetTotalPicks(group []stats.CompStats) (res int64) {
 	return res
 }
 
-func EvaluateDatasetWorth(betadata *map[string][]TsrDataPoint, maxResults int) []tsrValue {
+// for each slice of tsrDatapoint
+// calculate score
+// divide by len of slice
+func CalculateDatasetWorth(ds *[]TsrDataPoint, scores *TsrScores) float64 {
+	score := 0.0
+	// this is troublesome, can't adjust which param is to radius and which is to Y axis.
+	// will need to implement a map of some kind to keep track of what the use query specified as i'm using the values in multiple locations
+	for _, v := range *ds {
+		pr_score := (PR_MULTI * (v.R * scores.prAvg))
+		wr_score := (WR_MULTI * (v.Y * scores.wrAvg))
+		app_score := (APP_MULTI * (float64(v.Picks) / float64(scores.maxPicks)))
+		score += pr_score + wr_score + app_score
+	}
+	return score
+}
+func EvaluateDatasetsWorth(betadata *map[string][]TsrDataPoint, maxResults int, scores TsrScores) []tsrValue {
 	sortedData := make([]tsrValue, 0)
 	for comp, data := range *betadata {
-		score := 0.0
-		for _, v := range data {
-			score += (v.R * (v.Y * 2)) / 100
-		}
 		sortedData = append(sortedData, tsrValue{
 			comp:  comp,
-			value: score,
+			value: CalculateDatasetWorth(&data, &scores),
 		})
 	}
 	sort.Slice(sortedData, func(i, j int) bool {
@@ -85,8 +76,10 @@ func EvaluateDatasetWorth(betadata *map[string][]TsrDataPoint, maxResults int) [
 }
 func ProcessCompGroups(compGroups [][]stats.CompStats, dateGroups [][]string, maxResults int) map[string][]TsrDataPoint {
 	var (
-		unsorted_data = make(map[string][]TsrDataPoint, 0)
-		final_data    = make(map[string][]TsrDataPoint, 0)
+		unsorted_data             = make(map[string][]TsrDataPoint, 0)
+		final_data                = make(map[string][]TsrDataPoint, 0)
+		ttlPickrates, ttlWinrates []float64
+		maxPicks                  int64
 	)
 
 	for i, v := range compGroups {
@@ -95,18 +88,28 @@ func ProcessCompGroups(compGroups [][]stats.CompStats, dateGroups [][]string, ma
 			if v2.Ws == 0 || v2.Ls == 0 {
 				continue
 			}
-			wr := helpers.GetPercent(float64(v2.Ws), float64(v2.Total()))
-			pr := helpers.GetPercent(float64(v2.Total()), float64(total))
+			if v2.Total() > maxPicks {
+				maxPicks = v2.Total()
+			}
 			date := dateGroups[i][0]
-
+			wr := helpers.GetPercent(float64(v2.Ws), float64(v2.Total()))
+			ttlWinrates = append(ttlWinrates, wr)
+			pr := helpers.GetPercent(float64(v2.Total()), float64(total))
+			ttlPickrates = append(ttlPickrates, pr)
 			unsorted_data[v2.Comp] = append(unsorted_data[v2.Comp], TsrDataPoint{
-				X: date,
-				Y: wr,
-				R: pr,
+				X:     date,
+				Y:     wr,
+				R:     pr,
+				Picks: v2.Total(),
 			})
 		}
 	}
-	sortedData := EvaluateDatasetWorth(&unsorted_data, maxResults)
+	tsrScores := TsrScores{
+		wrAvg:    helpers.SumNumSlice(ttlWinrates) / float64(len(ttlWinrates)),
+		prAvg:    helpers.SumNumSlice(ttlPickrates) / float64(len(ttlPickrates)),
+		maxPicks: maxPicks,
+	}
+	sortedData := EvaluateDatasetsWorth(&unsorted_data, maxResults, tsrScores)
 	for _, dataset := range sortedData {
 		final_data[dataset.comp] = unsorted_data[dataset.comp]
 	}
